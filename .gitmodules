@@ -1,0 +1,6 @@
+[submodule "AndroidEssentials"]
+	path = AndroidEssentials
+	url = git@github.com:SciAps/AndroidEssentials.git
+[submodule "Common"]
+	path = Common
+	url = git@github.com:SciAps/Common.git

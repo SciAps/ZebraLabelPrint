@@ -1,1 +1,3 @@
 include ':ZebraPrint'
+include ':AndroidEssentials'
+include ':Common'
