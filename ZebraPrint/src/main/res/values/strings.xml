@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Zebra Print</string>
+    <string name="title_activity_zebra_print">Zebra Print</string>
+    <string name="action_settings">Settings</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="none_found">No devices found</string>
+</resources>

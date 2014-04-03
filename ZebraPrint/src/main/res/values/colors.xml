@@ -1,0 +1,27 @@
+<resources>
+
+    <color name="Black_overlay">#66000000</color>
+    <color name="Black">#000000</color>
+    <color name="White">#ffffff</color>
+    <color name="Gray">#666666</color>
+    <color name="L_Gray">#bbbbbb</color>
+    <color name="L_Blue">#33b5e5</color>
+    <color name="Blue">#0099cc</color>
+    <color name="L_Green">#99cc00</color>
+    <color name="Green">#669900</color>
+    <color name="D_Red">#990000</color>
+    <color name="L_Red">#ff4444</color>
+    <color name="Red">#cc0000</color>
+    <color name="L_Orange">#ffbb33</color>
+    <color name="Orange">#ff8800</color>
+    <color name="L_Purple">#AA66CC</color>
+    <color name="Purple">#9933cc</color>
+    <color name="Transparent_Red">#66990000</color>
+    <color name="Transparent_Gray">#ddbbbbbb</color>
+    <color name="New_D_Gray">#202020</color>
+    <color name="New_Gray">#282828</color>
+    <color name="New_L_Gray">#555555</color>
+    <color name="D_Green">#406000</color>
+
+
+</resources>
