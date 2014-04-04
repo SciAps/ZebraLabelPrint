@@ -15,9 +15,9 @@
             android:name="com.sciaps.android.zebralabelprint.zebraprint.ZebraPrintActivity"
             android:label="@string/title_activity_zebra_print">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+                <!--<action android:name="android.intent.action.MAIN" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
+                <!--<category android:name="android.intent.category.LAUNCHER" />-->
 
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

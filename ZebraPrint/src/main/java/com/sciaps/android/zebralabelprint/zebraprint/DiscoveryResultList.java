@@ -80,6 +80,8 @@ public abstract class DiscoveryResultList extends ListActivity implements Discov
         new UIHelper(this).showErrorDialogOnGuiThread(message);
     }
 
+
+
 //    private class ZebraExpandableListAdapter extends BaseExpandableListAdapter {
 //
 //        private ArrayList<DiscoveredPrinter> printerItems;

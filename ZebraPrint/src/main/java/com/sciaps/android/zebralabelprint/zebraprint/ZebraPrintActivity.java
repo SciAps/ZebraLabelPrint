@@ -41,6 +41,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class ZebraPrintActivity extends ActionBarActivity {
     private static final String TAG = "ZebraPrintActivity";
@@ -87,6 +88,8 @@ public class ZebraPrintActivity extends ActionBarActivity {
 
             //TEMP For testing purposes
             dataUri = Uri.parse("content://com.sciaps.libs.results/item/19/json");
+            Log.e(TAG, "Share uri: "+dataUri);
+
             try {
 
             InputStream is = getContentResolver().openInputStream(dataUri);
@@ -145,11 +148,8 @@ public class ZebraPrintActivity extends ActionBarActivity {
                     connection.open();
                     ZebraPrinter printer = ZebraPrinterFactory.getInstance(connection);
 
-//                    if (((CheckBox) findViewById(R.id.checkBox)).isChecked()) {
-//                        printer.storeImage(printStoragePath.getText().toString(), new ZebraImageAndroid(bitmap), 550, 412);
-//                    } else {
-                    printer.printImage(new ZebraImageAndroid(bitmap), 0, 5, 380, 580, false);
-//                    }
+
+                    printer.printImage(new ZebraImageAndroid(bitmap), 0, 5, 385, 580, false);
                     connection.close();
 
                 } catch (ConnectionException e) {
@@ -157,9 +157,6 @@ public class ZebraPrintActivity extends ActionBarActivity {
                 } catch (ZebraPrinterLanguageUnknownException e) {
                     helper.showErrorDialogOnGuiThread(e.getMessage());
                 }
-//                catch (ZebraIllegalArgumentException e) {
-//                    helper.showErrorDialogOnGuiThread(e.getMessage());
-//                }
                 finally {
                     bitmap.recycle();
                     helper.dismissLoadingDialog();
@@ -186,11 +183,16 @@ public class ZebraPrintActivity extends ActionBarActivity {
     }
 
     private String getTcpPortNumber() {
-        return "";//portNumberEditText.getText().toString();
+        return "0";//portNumberEditText.getText().toString();
     }
 
 
     private Bitmap createBitmapFromAnalysisResult(){
+
+        List<String> segs = dataUri.getPathSegments();
+        final String testIdName = segs.get(segs.size()-2);
+
+
         Bitmap b = Bitmap.createBitmap(290, 460, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(b);
 
@@ -211,17 +213,20 @@ public class ZebraPrintActivity extends ActionBarActivity {
         mTextPaint.setColor(Color.BLACK);
         mTextPaint.setTextSize(20);
 
+
+        canvas.drawText("Test #"+testIdName+" - "+libsResult.mTitle,15,30,mTextPaint);
+        mTextPaint.setTextSize(16);
+
         DateFormat df = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
+        canvas.drawText(df.format(libsResult.mTime.getTime()),15,47,mTextPaint);
+        mTextPaint.setTextSize(20);
 
-        canvas.drawText(libsResult.mTitle,15,30,mTextPaint);
-        canvas.drawText(df.format(libsResult.mTime.getTime()),15,50,mTextPaint);
-
-        canvas.drawText("(User Name)",15,70,mTextPaint);
+        canvas.drawText("(User)",15,65,mTextPaint);
 
         Alloy bestFingerprintMatch = libsResult.mBestAlloyMatches.get(0);
         String matchAlloy = bestFingerprintMatch.mName;
         String matchNumber = DecimalRounder.round(bestFingerprintMatch.getHitQuality());
-        canvas.drawText(matchAlloy + " | #" + matchNumber, 15, 90, mTextPaint);
+        canvas.drawText(matchAlloy + " | #" + matchNumber, 15, 85, mTextPaint);
 
         if (libsResult.mBestAlloyMatches.size()>1){
             Alloy secondMatch  = libsResult.mBestAlloyMatches.get(1);
