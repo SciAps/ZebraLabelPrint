@@ -34,13 +34,11 @@ import com.zebra.sdk.printer.discovery.DiscoveredPrinterNetwork;
 import com.zebra.sdk.printer.discovery.DiscoveryHandler;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 public abstract class DiscoveryResultList extends ListActivity implements DiscoveryHandler {
 
-    protected List<String> discoveredPrinters = null;
-    private DevicesListAdapter mListAdapter;
+     protected DevicesListAdapter mListAdapter;
 
     public DiscoveryResultList() {
         super();
@@ -61,7 +59,7 @@ public abstract class DiscoveryResultList extends ListActivity implements Discov
     public void foundPrinter(final DiscoveredPrinter printer) {
         runOnUiThread(new Runnable() {
             public void run() {
-                mListAdapter.addPrinterItem((DiscoveredPrinter) printer);
+                mListAdapter.addPrinterItem(printer);
                 mListAdapter.notifyDataSetChanged();
             }
         });
@@ -79,88 +77,6 @@ public abstract class DiscoveryResultList extends ListActivity implements Discov
     public void discoveryError(String message) {
         new UIHelper(this).showErrorDialogOnGuiThread(message);
     }
-
-
-
-//    private class ZebraExpandableListAdapter extends BaseExpandableListAdapter {
-//
-//        private ArrayList<DiscoveredPrinter> printerItems;
-//        private ArrayList<Map<String, String>> printerSettings;
-//
-//        public ZebraExpandableListAdapter() {
-//            printerItems = new ArrayList<DiscoveredPrinter>();
-//            printerSettings = new ArrayList<Map<String, String>>();
-//        }
-//
-//        public void addPrinterItem(DiscoveredPrinter p) {
-//            printerItems.add(p);
-//            printerSettings.add(p.getDiscoveryDataMap());
-//        }
-//
-//        public Object getChild(int groupPosition, int childPosition) {
-//            return printerSettings.get(groupPosition);
-//        }
-//
-//        public long getChildId(int groupPosition, int childPosition) {
-//            return 0;
-//        }
-//
-//        public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
-//            LayoutInflater inflater = (LayoutInflater) DiscoveryResultList.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-//            TextView itemView = (TextView) (inflater.inflate(android.R.layout.simple_list_item_1, null));
-//            StringBuilder settingsTextBuilder = new StringBuilder();
-//            itemView.setMaxLines(printerSettings.get(groupPosition).keySet().size());
-//            itemView.setTextSize(14.0f);
-//            for (String key : printerSettings.get(groupPosition).keySet()) {
-//                settingsTextBuilder.append(key);
-//                settingsTextBuilder.append(": ");
-//                settingsTextBuilder.append(printerSettings.get(groupPosition).get(key));
-//                settingsTextBuilder.append("\n");
-//            }
-//            itemView.setText(settingsTextBuilder.toString());
-//            return itemView;
-//        }
-//
-//        public int getChildrenCount(int groupPosition) {
-//            return 1;
-//        }
-//
-//        public Object getGroup(int groupPosition) {
-//            return printerItems.get(groupPosition);
-//        }
-//
-//        public int getGroupCount() {
-//            return printerItems.size();
-//        }
-//
-//        public long getGroupId(int groupPosition) {
-//            return groupPosition;
-//        }
-//
-//        public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
-//            LayoutInflater inflater = (LayoutInflater) DiscoveryResultList.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-//            TwoLineListItem itemView = (TwoLineListItem) (inflater.inflate(android.R.layout.simple_expandable_list_item_2, null));
-//            if (printerItems.get(groupPosition).getDiscoveryDataMap().containsKey("DARKNESS"))
-//                itemView.setBackgroundColor(0xff4477ff);
-//            if (printerItems.get(groupPosition) instanceof DiscoveredPrinterNetwork) {
-//                itemView.getText1().setText(((DiscoveredPrinterNetwork) printerItems.get(groupPosition)).address);
-//                itemView.getText2().setText(((DiscoveredPrinterNetwork) printerItems.get(groupPosition)).getDiscoveryDataMap().get("DNS_NAME"));
-//            } else if (printerItems.get(groupPosition) instanceof DiscoveredPrinterBluetooth) {
-//                itemView.getText1().setText(((DiscoveredPrinterBluetooth) printerItems.get(groupPosition)).address);
-//                itemView.getText2().setText(((DiscoveredPrinterBluetooth) printerItems.get(groupPosition)).friendlyName);
-//            }
-//            return itemView;
-//        }
-//
-//        public boolean hasStableIds() {
-//            return true;
-//        }
-//
-//        public boolean isChildSelectable(int groupPosition, int childPosition) {
-//            return false;
-//        }
-//
-//    }
 
     public class DevicesListAdapter extends ArrayAdapter {
 
@@ -196,12 +112,13 @@ public abstract class DiscoveryResultList extends ListActivity implements Discov
             if (printerItems.get(position).getDiscoveryDataMap().containsKey("DARKNESS"))
                 itemView.setBackgroundColor(0xff4477ff);
             if (printerItems.get(position) instanceof DiscoveredPrinterNetwork) {
-                txt2.setText(((DiscoveredPrinterNetwork) printerItems.get(position)).address);
-                txt1.setText(((DiscoveredPrinterNetwork) printerItems.get(position)).getDiscoveryDataMap().get("DNS_NAME"));
+                txt2.setText(((DiscoveredPrinterNetwork) item).address);
+                txt1.setText(( item).getDiscoveryDataMap().get("DNS_NAME"));
             } else if (printerItems.get(position) instanceof DiscoveredPrinterBluetooth) {
-                txt2.setText(((DiscoveredPrinterBluetooth) printerItems.get(position)).address);
-                txt1.setText(((DiscoveredPrinterBluetooth) printerItems.get(position)).friendlyName);
-            }
+                txt2.setText(((DiscoveredPrinterBluetooth) item).address);
+                txt1.setText(((DiscoveredPrinterBluetooth)item).friendlyName);
+
+             }
 
             return itemView;
         }

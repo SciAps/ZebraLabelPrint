@@ -10,7 +10,7 @@
         android:angle="270"
         android:startColor="@color/Red"
 
-        android:endColor="@color/New_Gray"
+        android:endColor="@color/D_Red"
 
         />
 

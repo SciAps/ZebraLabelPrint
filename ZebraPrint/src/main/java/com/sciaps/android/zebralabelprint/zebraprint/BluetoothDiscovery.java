@@ -59,6 +59,9 @@ public class BluetoothDiscovery extends DiscoveryResultList {
                 finish();
                 break;
             case R.id.action_discover:
+                mListAdapter = new DevicesListAdapter(getApplicationContext(),0);
+
+                setListAdapter(mListAdapter);
                 doDiscover();
                 break;
         }

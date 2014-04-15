@@ -7,4 +7,9 @@
     <string name="cancel">Cancel</string>
     <string name="discover">Discover</string>
     <string name="none_found">No devices found</string>
+    <string name="title_activity_splash_start">Zebra Print</string>
+    <string name="print">Print</string>
+    <string name="print_type">Print Type</string>
+    <string name="no_printer">No Printer</string>
+
 </resources>

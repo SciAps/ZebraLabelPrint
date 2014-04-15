@@ -47,29 +47,29 @@
             android:scaleType="fitXY"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:text="No Printer"
+            android:text="@string/no_printer"
             android:textColor="@color/L_Gray"
             android:gravity="center_vertical"
             android:background="@drawable/btn_clickable_right_bg" />
     </LinearLayout>
-    <!--<LinearLayout-->
-        <!--android:layout_marginTop="30dp"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:background="@xml/d_gray_rounded_corner_bg"-->
-        <!--android:orientation="horizontal">-->
-        <!--<Button-->
-            <!--android:id="@+id/btn_size"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="Print Size"-->
-            <!--android:background="@drawable/btn_clickable_bg"-->
-            <!--android:textSize="24sp"-->
-            <!--android:textStyle="bold"-->
-            <!--android:textColor="@color/L_Gray"-->
-            <!--android:gravity="center_vertical"-->
-            <!--android:paddingLeft="15dp" />-->
-    <!--</LinearLayout>-->
+    <LinearLayout
+        android:layout_marginTop="30dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@xml/d_gray_rounded_corner_bg"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/btn_type"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/print_type"
+            android:background="@drawable/btn_clickable_bg"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/L_Gray"
+            android:gravity="center_vertical"
+            android:paddingLeft="15dp" />
+    </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -78,7 +78,7 @@
         <ImageView
             android:id="@+id/img_prev"
             android:layout_width="wrap_content"
-            android:layout_height="200dp"
+            android:layout_height="160dp"
             android:background="@color/White"
 
             android:scaleType="centerInside"/>
@@ -98,7 +98,7 @@
                 android:id="@+id/btn_print"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Print"
+                android:text="@string/print"
                 android:background="@drawable/btn_clickable_red_bg"
                 android:textSize="32sp"
                 android:textStyle="bold"

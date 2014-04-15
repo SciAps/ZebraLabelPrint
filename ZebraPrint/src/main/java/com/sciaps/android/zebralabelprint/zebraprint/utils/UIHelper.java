@@ -1,14 +1,14 @@
 /***********************************************
  * CONFIDENTIAL AND PROPRIETARY 
- * 
+ *
  * The source code and other information contained herein is the confidential and the exclusive property of
  * ZIH Corp. and is subject to the terms and conditions in your end user license agreement.
  * This source code, and any other information contained herein, shall not be copied, reproduced, published, 
  * displayed or distributed, in whole or in part, in any medium, by any means, for any purpose except as
  * expressly permitted under such license agreement.
- * 
+ *
  * Copyright ZIH Corp. 2012
- * 
+ *
  * ALL RIGHTS RESERVED
  ***********************************************/
 
@@ -31,7 +31,11 @@ public class UIHelper {
         if (activity != null) {
             activity.runOnUiThread(new Runnable() {
                 public void run() {
-                    loadingDialog = ProgressDialog.show(activity, "", message, true, false);
+                    try {
+
+                    } catch (Exception e) {
+                        loadingDialog = ProgressDialog.show(activity, "", message, true, false);
+                    }
                 }
             });
         }
@@ -71,16 +75,20 @@ public class UIHelper {
 
     public void showErrorDialogOnGuiThread(final String errorMessage) {
         if (activity != null) {
-            activity.runOnUiThread(new Runnable() {
-                public void run() {
-                    new AlertDialog.Builder(activity).setMessage(errorMessage).setTitle("Error").setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            dialog.dismiss();
-                            dismissLoadingDialog();
-                        }
-                    }).create().show();
-                }
-            });
+            try {
+
+            } catch (Exception e) {
+                activity.runOnUiThread(new Runnable() {
+                    public void run() {
+                        new AlertDialog.Builder(activity).setMessage(errorMessage).setTitle("Error").setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.dismiss();
+                                dismissLoadingDialog();
+                            }
+                        }).create().show();
+                    }
+                });
+            }
         }
     }
 
