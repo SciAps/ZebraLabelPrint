@@ -45,6 +45,11 @@ android {
         exclude 'META-INF/NOTICE'
 
     }
+
+    lintOptions {
+        //abortOnError false
+        disable 'InvalidPackage'
+    }
 }
 
 dependencies {
