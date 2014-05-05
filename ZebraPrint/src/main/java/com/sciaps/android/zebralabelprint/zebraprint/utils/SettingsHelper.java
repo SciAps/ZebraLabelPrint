@@ -25,6 +25,7 @@ public class SettingsHelper {
 
     private static final String tcpAddressKey = "TCP_ADDRESS";
     private static final String tcpPortKey = "TCP_PORT";
+    private static final String printTypeKey = "PRINT_TYPE";
 
     public static String getIp(Context context) {
         SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
@@ -44,6 +45,12 @@ public class SettingsHelper {
     public static String getBluetoothName(Context context) {
         SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
         return settings.getString(bluetoothNameKey, "");
+    }
+
+
+    public static int getPrintType(Context context) {
+        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
+        return settings.getInt(printTypeKey, 0);
     }
 
     public static void saveIp(Context context, String ip) {
@@ -71,6 +78,13 @@ public class SettingsHelper {
         SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putString(bluetoothNameKey, name);
+        editor.commit();
+    }
+
+    public static void savePrintType(Context context, int type) {
+        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putInt(printTypeKey, type);
         editor.commit();
     }
 }

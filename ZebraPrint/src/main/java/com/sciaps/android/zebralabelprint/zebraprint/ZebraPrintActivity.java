@@ -1,5 +1,6 @@
 package com.sciaps.android.zebralabelprint.zebraprint;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -10,14 +11,18 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.sciaps.android.zebralabelprint.zebraprint.utils.PrintUtils;
 import com.sciaps.android.zebralabelprint.zebraprint.utils.SettingsHelper;
+import com.sciaps.android.zebralabelprint.zebraprint.utils.UIHelper;
 import com.sciaps.common.libs.LIBAnalysisResult;
 import com.sciaps.common.serialize.JsonSerializerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+
+import static com.sciaps.android.zebralabelprint.zebraprint.PrintTypeDialog.Types;
 
 public class ZebraPrintActivity extends ActionBarActivity {
     private static final String TAG = "ZebraPrintActivity";
@@ -32,28 +37,48 @@ public class ZebraPrintActivity extends ActionBarActivity {
     public static final String CUSTOM_INTENT = "sciaps.intent.action.PRINT";
     PrintUtils printUtils;
     private Button btn_type;
+    private PrintTypeDialog dialog;
+    private ImageView img_prev;
+    private UIHelper helper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_zebra_print);
 
+        helper = new UIHelper(this);
+        if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+            helper.showErrorDialog("Bluetooth Not Enabled");
+        }
         printUtils = new PrintUtils(ZebraPrintActivity.this);
         printUtils.setPrinterCallback(new PrintUtils.PrintCallBack() {
             @Override
             public void onPrintSent() {
                 setResult(RESULT_CANCELED);
                 finish();
+                return;
+            }
+
+            @Override
+            public void onPrintError(Exception e) {
+               // helper.showErrorDialogOnGuiThread("Error: " + e.getMessage());
+                Toast.makeText(getApplicationContext(),"Job Failed",Toast.LENGTH_LONG).show();
+                return;
             }
         });
 
         Intent intent = getIntent();
         String action = intent.getAction();
         String type = intent.getType();
+        dataUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
 
-        if (CUSTOM_INTENT.equals(action) && type != null) {
+//        //temp
+//        if (dataUri==null){
+//            dataUri = Uri.parse("content://com.sciaps.libs.results/item/37/json");
+//        }
+
+        if (CUSTOM_INTENT.equals(action) && type != null&&dataUri!=null) {
             try {
-                dataUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
                 Log.e(TAG, "Share uri: " + dataUri);
 
 
@@ -77,23 +102,26 @@ public class ZebraPrintActivity extends ActionBarActivity {
         btn_type = (Button) findViewById(R.id.btn_type);
         btn_type.setOnClickListener(typeListener);
 
+        img_prev = (ImageView) findViewById(R.id.img_prev);
+
 
         dName = SettingsHelper.getBluetoothName(getApplicationContext());
         if (dName.length() > 0) {
             btn_selectPrinter.setText(dName);
+        } else {
+            btn_print.setEnabled(false);
+
         }
+
         Bitmap mPrintBm;
         if (libsResult != null) {
-            mPrintBm = printUtils.createPortraitBitmapFromAnalysisResult(getApplicationContext(), dataUri, libsResult);
-            ImageView imv = (ImageView) findViewById(R.id.img_prev);
+            mPrintBm = printUtils.createBitmapFromAnalysisResult(getApplicationContext(), dataUri, libsResult);
 
-            imv.setImageBitmap(mPrintBm);
+            img_prev.setImageBitmap(mPrintBm);
         } else {
-            mPrintBm = printUtils.createTestBitmap();
-            ImageView imv = (ImageView) findViewById(R.id.img_prev);
+            mPrintBm = printUtils.createTestBitmap(getApplicationContext());
 
-            imv.setImageBitmap(mPrintBm);
-            // btn_print.setEnabled(false);
+            img_prev.setImageBitmap(mPrintBm);
         }
 
     }
@@ -128,7 +156,6 @@ public class ZebraPrintActivity extends ActionBarActivity {
     };
 
 
-    private PrintTypeDialog dialog;
     private OnClickListener typeListener = new OnClickListener() {
         @Override
         public void onClick(View view) {
@@ -136,19 +163,21 @@ public class ZebraPrintActivity extends ActionBarActivity {
             dialog = new PrintTypeDialog("Select Output");
             dialog.setDialogCallback(new PrintTypeDialog.CallBack() {
                 @Override
-                public void onItemSelected(PrintTypeDialog.Types type) {
+                public void onItemSelected(Types type) {
 
+                    SettingsHelper.savePrintType(getApplicationContext(), type.ordinal());
+                    Bitmap mPrintBm;
 
-                    switch (type) {
-                        case Landscape_2X3:
-                            //store to prefs
-                            break;
-                        case Portrait3X2:
-                            break;
+                    if (libsResult != null) {
+                        mPrintBm = printUtils.createBitmapFromAnalysisResult(getApplicationContext(), dataUri, libsResult);
 
+                    } else {
+                        mPrintBm = printUtils.createTestBitmap(getApplicationContext());
 
                     }
-                    //store to prefs
+                    img_prev.setImageBitmap(mPrintBm);
+
+
                 }
             });
             dialog.show(getFragmentManager(), TAG);
@@ -182,6 +211,8 @@ public class ZebraPrintActivity extends ActionBarActivity {
                 SettingsHelper.saveBluetoothName(this, name);
 
                 btn_selectPrinter.setText(name);
+                btn_print.setEnabled(true);
+
             }
             if (resultCode == RESULT_CANCELED) {
             }

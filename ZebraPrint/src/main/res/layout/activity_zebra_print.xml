@@ -1,4 +1,4 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,23 +9,30 @@
     tools:context="com.sciaps.android.libs.export.ZebraLabelPrint"
     android:background="@color/New_Gray"
     android:orientation="vertical">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@xml/d_gray_rounded_corner_bg"
-        android:orientation="horizontal">
-        <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:src="@drawable/ic_bluetooth"
-            android:paddingLeft="5dp"
-            android:paddingRight="5dp"
-            android:background="@drawable/btn_clickable_left_bg"
-            android:enabled="false"
-            android:layout_marginRight="5dp"
+        android:orientation="vertical">
 
-            />
-        <!--<Button-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@xml/d_gray_rounded_corner_bg"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_bluetooth"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:background="@drawable/btn_clickable_left_bg"
+                android:enabled="false"
+                android:layout_marginRight="5dp"
+
+                />
+            <!--<Button-->
             <!--android:layout_width="wrap_content"-->
             <!--android:layout_height="match_parent"-->
             <!--android:text="Printer:"-->
@@ -39,61 +46,71 @@
             <!--android:enabled="false"-->
             <!--android:drawableLeft="@drawable/ic_bluetooth"-->
             <!--android:layout_marginRight="5dp" />-->
-        <Button
-            android:id="@+id/btn_selectPrinter"
-            android:paddingLeft="15dp"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="fitXY"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:text="@string/no_printer"
-            android:textColor="@color/L_Gray"
-            android:gravity="center_vertical"
-            android:background="@drawable/btn_clickable_right_bg" />
-    </LinearLayout>
-    <LinearLayout
-        android:layout_marginTop="30dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@xml/d_gray_rounded_corner_bg"
-        android:orientation="horizontal">
-        <Button
-            android:id="@+id/btn_type"
+            <Button
+                android:id="@+id/btn_selectPrinter"
+                android:paddingLeft="15dp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitXY"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:text="@string/no_printer"
+                android:textColor="@color/L_Gray"
+                android:gravity="center_vertical"
+                android:background="@drawable/btn_clickable_right_bg" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_marginTop="20dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/print_type"
-            android:background="@drawable/btn_clickable_bg"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/L_Gray"
-            android:gravity="center_vertical"
-            android:paddingLeft="15dp" />
+            android:background="@xml/d_gray_rounded_corner_bg"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_type"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/print_type"
+                android:background="@drawable/btn_clickable_bg"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/L_Gray"
+                android:gravity="center_vertical"
+                android:paddingLeft="15dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/img_prev"
+                android:layout_width="wrap_content"
+                android:layout_height="130dp"
+                android:background="@color/New_Gray"
+
+                android:scaleType="centerInside" />
+        </LinearLayout>
     </LinearLayout>
+
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
-        android:gravity="center">
-        <ImageView
-            android:id="@+id/img_prev"
-            android:layout_width="wrap_content"
-            android:layout_height="160dp"
-            android:background="@color/White"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        >
 
-            android:scaleType="centerInside"/>
-
-    </LinearLayout>
-      <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="bottom|center">
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@xml/d_gray_rounded_corner_bg"
             android:gravity="center"
-            android:layout_marginBottom="40dp">
+            android:layout_marginBottom="30dp"
+            >
+
             <Button
                 android:id="@+id/btn_print"
                 android:layout_width="wrap_content"
@@ -110,4 +127,4 @@
                 android:paddingBottom="15dp" />
         </LinearLayout>
     </LinearLayout>
-</LinearLayout>
+</RelativeLayout>

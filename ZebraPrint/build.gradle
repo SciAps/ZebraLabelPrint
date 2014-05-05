@@ -10,11 +10,31 @@ android {
         versionCode 1
         versionName "1.0"
     }
+    signingConfigs {
+        debug {
+            storeFile file(SCIAPS_DEBUG_STORE_FILE)
+            storePassword SCIAPS_DEBUG_STORE_PASSWORD
+            keyAlias SCIAPS_DEBUG_KEY_ALIAS
+            keyPassword SCIAPS_DEBUG_KEY_PASSWORD
+        }
+        release {
+            storeFile file(SCIAPS_RELEASE_STORE_FILE)
+            storePassword SCIAPS_RELEASE_STORE_PASSWORD
+            keyAlias SCIAPS_RELEASE_KEY_ALIAS
+            keyPassword SCIAPS_RELEASE_KEY_PASSWORD
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
             runProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            signingConfig signingConfigs.release
         }
+
     }
 
     packagingOptions {

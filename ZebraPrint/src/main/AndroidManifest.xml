@@ -16,6 +16,13 @@
         <activity
             android:name="com.sciaps.android.zebralabelprint.zebraprint.ZebraPrintActivity"
             android:label="@string/title_activity_zebra_print" >
+            <intent-filter>
+
+            <action android:name="android.intent.action.MAIN" />
+
+
+            <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
 
         </activity>
         <activity
@@ -28,10 +35,6 @@
             android:label="@string/title_activity_splash_start" >
             <intent-filter>
 
-                 <action android:name="android.intent.action.MAIN" />
-
-
-                 <category android:name="android.intent.category.LAUNCHER" />
 
                 <action android:name="sciaps.intent.action.PRINT" />
 

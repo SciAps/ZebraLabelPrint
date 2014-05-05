@@ -21,9 +21,10 @@ import java.util.ArrayList;
 
 public class PrintTypeDialog extends DialogFragment {
 
-    protected enum Types {
-        Landscape_2X3,
-        Portrait3X2
+    public enum Types {
+
+        Portrait2X3,
+        Landscape3X2,
     }
 
     public static final String CUSTOM_INTENT = "sciaps.intent.action.PRINT";

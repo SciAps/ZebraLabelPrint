@@ -1,6 +1,7 @@
 package com.sciaps.android.zebralabelprint.zebraprint;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -24,6 +25,7 @@ public class SplashStartActivity extends Activity {
     private Uri dataUri;
     private LIBAnalysisResult libsResult;
     private PrintUtils printUtils;
+    private String mac;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,75 +38,121 @@ public class SplashStartActivity extends Activity {
             public void onPrintSent() {
                 finish();
             }
+
+            @Override
+            public void onPrintError(Exception e) {
+                goToSetUpActivity();
+                return;
+            }
         });
-
-
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        final String mac = SettingsHelper.getBluetoothAddress(getApplicationContext());
+        mac = SettingsHelper.getBluetoothAddress(getApplicationContext());
         Log.i(TAG, "Searching for Printer: " + mac);
         Intent intent = getIntent();
         final String action = intent.getAction();
         final String type = intent.getType();
         dataUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
 
-        //if no mac address go to settings
-        if (mac.length() == 0) {
-            Log.i(TAG, "Printer Not Set Up: " + mac);
 
+        //if no mac address go to settings
+        if (getBTError() != 0) {
             goToSetUpActivity();
             return;
-        }
+
+        }else {
+
+            try {
+                Log.e(TAG, "Share uri: " + dataUri);
 
 
+                InputStream is = getContentResolver().openInputStream(dataUri);
+                libsResult = loadResult(is);
 
-
-
-        new PrinterFinder(getApplicationContext(), new PrinterFinder.Callback() {
-            @Override
-            public void onMatchCallback(boolean printerWasFound) {
-                if (printerWasFound) {
-                    Log.i(TAG, "Printer found: " + mac);
-
-                    if (PRINT_INTENT.equals(action) && type != null) {
-                        try {
-                            Log.e(TAG, "Share uri: " + dataUri);
-
-
-                            InputStream is = getContentResolver().openInputStream(dataUri);
-                            libsResult = loadResult(is);
-
-                            print();
-                            return;
-
-                        } catch (Exception e) {
-                            Log.e(TAG, "Error", e);
-
-                        }
-
-
-                    } else {
-                        Log.w(TAG, "No file description");
-
-                    }
-                }
-                Log.i(TAG, "Printer not found ");
-                TextView txt = (TextView) findViewById(R.id.txt_splash_start);
-                if (txt != null) {
-                    txt.setText("Printer not found");
-                }
-                //choose the printer
-                goToSetUpActivity();
-
+                print();
                 return;
 
+            } catch (Exception e) {
+                Log.e(TAG, "Error", e);
+
             }
-        }, mac);
+        }
 
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+
+
+//
+//
+//
+//        new PrinterFinder(getApplicationContext(), new PrinterFinder.Callback() {
+//            @Override
+//            public void onMatchCallback(boolean printerWasFound) {
+//                if (printerWasFound) {
+//                    Log.i(TAG, "Printer found: " + mac);
+//
+//                    if (PRINT_INTENT.equals(action) && type != null) {
+//                        try {
+//                            Log.e(TAG, "Share uri: " + dataUri);
+//
+//
+//                            InputStream is = getContentResolver().openInputStream(dataUri);
+//                            libsResult = loadResult(is);
+//
+//                            print();
+//                            return;
+//
+//                        } catch (Exception e) {
+//                            Log.e(TAG, "Error", e);
+//
+//                        }
+//
+//
+//                    } else {
+//                        Log.w(TAG, "No file description");
+//
+//                    }
+//                }
+//                Log.i(TAG, "Printer not found ");
+//                TextView txt = (TextView) findViewById(R.id.txt_splash_start);
+//                if (txt != null) {
+//                    txt.setText("Printer not found");
+//                }
+//                //choose the printer
+//                goToSetUpActivity();
+//
+//                return;
+//
+//            }
+//        }, mac);
+
+    }
+
+    private int getBTError() {
+        boolean macExists = mac.length() > 0;
+        boolean btEnabled = BluetoothAdapter.getDefaultAdapter().isEnabled();
+        boolean dataUriExists = dataUri != null;
+
+        if (!macExists) {
+            Log.i(TAG, "Printer Not Set Up: " + mac);
+            return 1;
+        } else if (!btEnabled) {
+
+            Log.i(TAG, "Bluetooth is off");
+
+            return 2;
+        } else if (!dataUriExists) {
+            Log.i(TAG, "Share uri error");
+
+            return 3;
+        } else {
+            return 0;
+        }
+    }
+
+    ;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -114,7 +162,7 @@ public class SplashStartActivity extends Activity {
         }
     }
 
-    private void goToSetUpActivity(){
+    private void goToSetUpActivity() {
         Intent intent = new Intent(SplashStartActivity.this, ZebraPrintActivity.class);
         intent.setAction(PRINT_INTENT);
         intent.setType("application/json");
