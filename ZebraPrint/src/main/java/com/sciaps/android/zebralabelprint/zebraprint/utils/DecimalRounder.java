@@ -43,4 +43,17 @@ public  class DecimalRounder {
         return String.format("%.3f", f);
 
     }
+    public static String round(double d){
+        if (d>10){
+            return String.format("%.2f", d);
+
+
+        }
+        if (d>1){
+            return String.format("%.2f", d);
+
+        }
+        return String.format("%.3f", d);
+
+    }
 }

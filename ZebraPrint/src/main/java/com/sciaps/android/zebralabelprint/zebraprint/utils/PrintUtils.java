@@ -13,8 +13,10 @@ import android.net.Uri;
 import android.os.Looper;
 
 import com.sciaps.android.zebralabelprint.zebraprint.R;
-import com.sciaps.common.Alloy;
 import com.sciaps.common.ChemResult;
+import com.sciaps.common.algorithms.GradeMatchRanker;
+import com.sciaps.common.calculation.libs.EmpiricalCurveCalc;
+import com.sciaps.android.zebralabelprint.zebraprint.data.ChemResultItem;
 import com.sciaps.common.libs.LIBAnalysisResult;
 import com.zebra.sdk.comm.BluetoothConnection;
 import com.zebra.sdk.comm.Connection;
@@ -49,8 +51,9 @@ public class PrintUtils {
 
     public interface PrintCallBack {
         void onPrintSent();
+
         void onPrintError(Exception e);
-     }
+    }
 
     private static Bitmap mBmp;
 
@@ -62,11 +65,11 @@ public class PrintUtils {
     public Bitmap createTestBitmap(Context ctx) {
 
         int type = SettingsHelper.getPrintType(ctx);
-        mBmp=null;
+        mBmp = null;
         if (type == Landscape3X2.ordinal()) {
-              mBmp = create3X2TestBitmap();
+            mBmp = create3X2TestBitmap();
         } else if (type == Portrait2X3.ordinal()) {
-              mBmp = create2X3TestBitmap();
+            mBmp = create2X3TestBitmap();
 
         }
         return mBmp;
@@ -139,17 +142,18 @@ public class PrintUtils {
     public Bitmap createBitmapFromAnalysisResult(Context ctx, Uri dataUri, LIBAnalysisResult libsResult) {
 
         int type = SettingsHelper.getPrintType(ctx);
-        mBmp =null;
+        mBmp = null;
         if (type == Landscape3X2.ordinal()) {
-              mBmp = create3X2Label(ctx, dataUri, libsResult);
+            mBmp = create3X2Label(ctx, dataUri, libsResult);
         } else if (type == Portrait2X3.ordinal()) {
-              mBmp = create2X3Label(ctx, dataUri, libsResult);
+            mBmp = create2X3Label(ctx, dataUri, libsResult);
 
         }
 
-            return mBmp;
+        return mBmp;
 
     }
+
 
     private Bitmap create2X3Label(Context ctx, Uri dataUri, LIBAnalysisResult libsResult) {
 
@@ -177,8 +181,9 @@ public class PrintUtils {
         mTextPaint.setColor(Color.BLACK);
         mTextPaint.setTextSize(20);
 
+        String title = libsResult.mTitle != null ? " - " + libsResult.mTitle : "";
 
-        canvas.drawText("Test #" + testIdName + " - " + libsResult.mTitle, 15, 30, mTextPaint);
+        canvas.drawText("Test #" + testIdName + title, 15, 30, mTextPaint);
         mTextPaint.setTextSize(16);
 
         DateFormat df = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
@@ -187,19 +192,32 @@ public class PrintUtils {
 
         canvas.drawText("(User)", 15, 65, mTextPaint);
 
-        Alloy bestFingerprintMatch = libsResult.mBestAlloyMatches.get(0);
-        String matchAlloy = bestFingerprintMatch.mName;
-        String matchNumber = DecimalRounder.round(bestFingerprintMatch.getHitQuality());
-        canvas.drawText(matchAlloy + " | #" + matchNumber, 15, 85, mTextPaint);
 
-        if (libsResult.mBestAlloyMatches.size() > 1) {
-            Alloy secondMatch = libsResult.mBestAlloyMatches.get(1);
-            matchAlloy = secondMatch.mName;
-            matchNumber = DecimalRounder.round(secondMatch.getHitQuality());
-            mTextPaint.setColor(Color.GRAY);
-            mTextPaint.setTextSize(18);
-            canvas.drawText("2nd Match: " + matchAlloy + " | #" + matchNumber, 15, 105, mTextPaint);
+        GradeMatchRanker.GradeRank bestGrade;
+        if (libsResult.mResult.gradeRanks != null && libsResult.mResult.gradeRanks.size() > 0) {
+            bestGrade = libsResult.mResult.gradeRanks.get(0);
 
+
+            //Alloy bestFingerprintMatch = libsResult..mBestAlloyMatches.get(0);
+            String matchAlloy = bestGrade.grade.name;//bestFingerprintMatch.mName;
+            String matchNumber = bestGrade.matchNumber > 0 ? DecimalRounder.round(bestGrade.matchNumber) : "0";
+            canvas.drawText(matchAlloy + " | #" + matchNumber, 15, 85, mTextPaint);
+
+
+            if (libsResult.mResult.gradeRanks.size() > 1) {
+                GradeMatchRanker.GradeRank secondGrade = libsResult.mResult.gradeRanks.get(1);
+
+                //Alloy secondMatch = libsResult.mBestAlloyMatches.get(1);
+                matchAlloy = secondGrade.grade.name;
+                matchNumber = secondGrade.matchNumber > 0 ? DecimalRounder.round(bestGrade.matchNumber) : "0";
+
+                mTextPaint.setColor(Color.GRAY);
+                mTextPaint.setTextSize(18);
+                canvas.drawText("2nd Match: " + matchAlloy + " | #" + matchNumber, 15, 105, mTextPaint);
+
+            }
+        } else {
+            bestGrade = null;
         }
         //add logos===========
         Bitmap icon = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.ic_z_bw);
@@ -234,12 +252,28 @@ public class PrintUtils {
         mTextPaint3.setTextSize(18);
 
 
-        ArrayList<ChemResult> chemResults = new ArrayList<ChemResult>(libsResult.getChemResults());
 
-        Collections.sort(chemResults, ChemResult.ConcentrationDecend);
+
+        ArrayList<ChemResultItem> chemResults = new ArrayList<ChemResultItem>(libsResult.mResult.chemResults.size());
+        for (EmpiricalCurveCalc.EmpiricalCurveResult r : libsResult.mResult.chemResults) {
+            ChemResultItem i = new ChemResultItem();
+            i.chemResult = new ChemResult(r.element);
+            i.chemResult.value = (float) r.percent;
+            i.chemResult.error = (float) r.error;
+            if (bestGrade != null) {
+                i.gradeRange = bestGrade.grade.spec.get(i.chemResult.element);
+            }
+            chemResults.add(i);
+        }
+
+
+        // Collections.sort(chemResults, mResultComparator);
+
+        Collections.sort(chemResults, ChemResultItem.ConcentrationDecend);
 
         int y = 60;
         int x;
+
         for (int i = 0; i < 10 && i < chemResults.size(); i++) {
 
 
@@ -251,13 +285,23 @@ public class PrintUtils {
             }
 
             paint.setStrokeWidth(3);
-            canvas.drawRect(x, y, x + 43, y + 48, paint);
+           canvas.drawRect(x, y, x + 43, y + 48, paint);
             canvas.drawRect(x + 1, y + 1, x + 42, y + 47, paint2);
 
-            canvas.drawText(chemResults.get(i).element.symbol, x + 3, y + 38, mTextPaint);
-            canvas.drawText(chemResults.get(i).element.atomicNumber + "", x + 30, y + 10, mTextPaint2);
+//            Bitmap elem =Bitmap.createScaledBitmap(BitmapFactory.decodeResource(ctx.getResources(), R.drawable.element), 55,50, false) ;
+//            Rect rec3 = new Rect(0, 0, 55, 50);
+//            Rect rec4= new Rect( x, y, x + 55, y + 50);
+//            canvas.drawBitmap(elem, rec3, rec4, paint);
+//
 
-            String formatted = chemResults.get(i).value > 0 ? DecimalRounder.roundWPercent(chemResults.get(i).value) : "<0.05%";
+
+            canvas.drawText(chemResults.get(i).chemResult.element.symbol, x + 3, y + 38, mTextPaint);
+            canvas.drawText(chemResults.get(i).chemResult.element.atomicNumber + "", x + 30, y + 10, mTextPaint2);
+
+          //  canvas.drawText(chemResults.get(i).chemResult.element.name(), x + 3, y + 3, mTextPaint4);
+
+
+            String formatted = chemResults.get(i).chemResult.value > 0 ? DecimalRounder.roundWPercent(chemResults.get(i).chemResult.value) : "<0.05%";
 
             canvas.drawText(formatted, x + 54, y + 42, mTextPaint3);
 
@@ -294,33 +338,50 @@ public class PrintUtils {
         mTextPaint.setColor(Color.BLACK);
         mTextPaint.setTextSize(30);
 
-
-        canvas.drawText("Test #" + testIdName + " - " + libsResult.mTitle, 15, 34, mTextPaint);
+        String title = libsResult.mTitle != null ? " - " + libsResult.mTitle : "";
+        canvas.drawText("Test #" + testIdName + title, 15, 34, mTextPaint);
         mTextPaint.setTextSize(25);
         DateFormat df = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
-        canvas.drawText("User:(User); "+df.format(libsResult.mTime.getTime()), 15, 60, mTextPaint);
-
+        canvas.drawText("User:(User); " + df.format(libsResult.mTime.getTime()), 15, 60, mTextPaint);
 
         mTextPaint.setTextSize(80);
         mTextPaint.setFakeBoldText(true);
-        Alloy bestFingerprintMatch = libsResult.mBestAlloyMatches.get(0);
-        String matchAlloy = bestFingerprintMatch.mName;
-        String matchNumber = DecimalRounder.round(bestFingerprintMatch.getHitQuality());
-        canvas.drawText(matchAlloy, 15, 140, mTextPaint);
-        mTextPaint.setTextSize(50);
-        mTextPaint.setFakeBoldText(false);
 
-        canvas.drawText("#" + matchNumber, 35, 195, mTextPaint);
+        GradeMatchRanker.GradeRank bestGrade;
+        if (libsResult.mResult.gradeRanks != null && libsResult.mResult.gradeRanks.size() > 0) {
+            bestGrade = libsResult.mResult.gradeRanks.get(0);
 
-        if (libsResult.mBestAlloyMatches.size() > 1) {
-            Alloy secondMatch = libsResult.mBestAlloyMatches.get(1);
-            matchAlloy = secondMatch.mName;
-            matchNumber = DecimalRounder.round(secondMatch.getHitQuality());
-            mTextPaint.setColor(Color.GRAY);
-            mTextPaint.setTextSize(22);
-            canvas.drawText("2nd Match: " + matchAlloy + " | #" + matchNumber, 15, 225, mTextPaint);
 
+            //Alloy bestFingerprintMatch = libsResult..mBestAlloyMatches.get(0);
+            String matchAlloy = bestGrade.grade.name;//bestFingerprintMatch.mName;
+
+
+            String matchNumber = bestGrade.matchNumber > 0 ? DecimalRounder.round(bestGrade.matchNumber) : "0";
+
+            canvas.drawText(matchAlloy, 15, 140, mTextPaint);
+            mTextPaint.setTextSize(50);
+            mTextPaint.setFakeBoldText(false);
+
+            canvas.drawText("#" + matchNumber, 35, 195, mTextPaint);
+
+
+            if (libsResult.mResult.gradeRanks.size() > 1) {
+                GradeMatchRanker.GradeRank secondGrade = libsResult.mResult.gradeRanks.get(1);
+
+                //Alloy secondMatch = libsResult.mBestAlloyMatches.get(1);
+                matchAlloy = secondGrade.grade.name;
+                matchNumber = secondGrade.matchNumber > 0 ? DecimalRounder.round(bestGrade.matchNumber) : "0";
+
+                mTextPaint.setColor(Color.GRAY);
+                mTextPaint.setTextSize(22);
+                canvas.drawText("2nd Match: " + matchAlloy + " | #" + matchNumber, 15, 225, mTextPaint);
+
+            }
+        } else {
+            bestGrade = null;
         }
+
+
         //add logos===========
         Bitmap icon = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.ic_z_bw);
         Rect rec = new Rect(0, 0, icon.getWidth(), icon.getHeight());
