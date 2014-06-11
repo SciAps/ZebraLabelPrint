@@ -13,10 +13,10 @@ import android.net.Uri;
 import android.os.Looper;
 
 import com.sciaps.android.zebralabelprint.zebraprint.R;
-import com.sciaps.common.ChemResult;
 import com.sciaps.common.algorithms.GradeMatchRanker;
 import com.sciaps.common.calculation.libs.EmpiricalCurveCalc;
-import com.sciaps.android.zebralabelprint.zebraprint.data.ChemResultItem;
+import com.sciaps.common.data2.ChemResult;
+import com.sciaps.common.data2.ChemResultItem;
 import com.sciaps.common.libs.LIBAnalysisResult;
 import com.zebra.sdk.comm.BluetoothConnection;
 import com.zebra.sdk.comm.Connection;
@@ -190,25 +190,45 @@ public class PrintUtils {
         canvas.drawText(df.format(libsResult.mTime.getTime()), 15, 47, mTextPaint);
         mTextPaint.setTextSize(20);
 
-        canvas.drawText("(User)", 15, 65, mTextPaint);
+      // canvas.drawText("(User)", 15, 65, mTextPaint);
 
 
-        GradeMatchRanker.GradeRank bestGrade;
+
+        ArrayList<ChemResultItem> chemResults = new ArrayList<ChemResultItem>(libsResult.mResult.chemResults.size());
+        final GradeMatchRanker.GradeRank bestGrade;
+
+
+
         if (libsResult.mResult.gradeRanks != null && libsResult.mResult.gradeRanks.size() > 0) {
             bestGrade = libsResult.mResult.gradeRanks.get(0);
-
+            for (EmpiricalCurveCalc.EmpiricalCurveResult r : libsResult.mResult.chemResults) {
+                ChemResultItem i = new  ChemResultItem();
+                i.chemResult = new ChemResult(r.element);
+                i.chemResult.value = (float) r.percent;
+                i.chemResult.error = (float) r.error;
+                if (bestGrade != null) {
+                    i.gradeRange = bestGrade.grade.spec.get(i.chemResult.element);
+                }
+                chemResults.add(i);
+            }
+            Collections.sort(chemResults, ChemResultItem.ConcentrationDecend);
 
             //Alloy bestFingerprintMatch = libsResult..mBestAlloyMatches.get(0);
-            String matchAlloy = bestGrade.grade.name;//bestFingerprintMatch.mName;
+            String matchAlloy = bestGrade.grade.getDisplayName();//bestFingerprintMatch.mName;
             String matchNumber = bestGrade.matchNumber > 0 ? DecimalRounder.round(bestGrade.matchNumber) : "0";
-            canvas.drawText(matchAlloy + " | #" + matchNumber, 15, 85, mTextPaint);
+            canvas.drawText(matchAlloy + " | #" + matchNumber, 15, 68, mTextPaint);
+
+            Paint mTextPaint2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+            mTextPaint.setColor(Color.GRAY);
+            mTextPaint.setTextSize(14);
+            canvas.drawText("Base: " + bestGrade.grade.getBase().name, 15, 85, mTextPaint);
 
 
             if (libsResult.mResult.gradeRanks.size() > 1) {
                 GradeMatchRanker.GradeRank secondGrade = libsResult.mResult.gradeRanks.get(1);
 
                 //Alloy secondMatch = libsResult.mBestAlloyMatches.get(1);
-                matchAlloy = secondGrade.grade.name;
+                matchAlloy = secondGrade.grade.getDisplayName();
                 matchNumber = secondGrade.matchNumber > 0 ? DecimalRounder.round(bestGrade.matchNumber) : "0";
 
                 mTextPaint.setColor(Color.GRAY);
@@ -254,22 +274,6 @@ public class PrintUtils {
 
 
 
-        ArrayList<ChemResultItem> chemResults = new ArrayList<ChemResultItem>(libsResult.mResult.chemResults.size());
-        for (EmpiricalCurveCalc.EmpiricalCurveResult r : libsResult.mResult.chemResults) {
-            ChemResultItem i = new ChemResultItem();
-            i.chemResult = new ChemResult(r.element);
-            i.chemResult.value = (float) r.percent;
-            i.chemResult.error = (float) r.error;
-            if (bestGrade != null) {
-                i.gradeRange = bestGrade.grade.spec.get(i.chemResult.element);
-            }
-            chemResults.add(i);
-        }
-
-
-        // Collections.sort(chemResults, mResultComparator);
-
-        Collections.sort(chemResults, ChemResultItem.ConcentrationDecend);
 
         int y = 60;
         int x;
@@ -342,7 +346,7 @@ public class PrintUtils {
         canvas.drawText("Test #" + testIdName + title, 15, 34, mTextPaint);
         mTextPaint.setTextSize(25);
         DateFormat df = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
-        canvas.drawText("User:(User); " + df.format(libsResult.mTime.getTime()), 15, 60, mTextPaint);
+        canvas.drawText(df.format(libsResult.mTime.getTime()), 15, 60, mTextPaint);
 
         mTextPaint.setTextSize(80);
         mTextPaint.setFakeBoldText(true);
@@ -353,7 +357,7 @@ public class PrintUtils {
 
 
             //Alloy bestFingerprintMatch = libsResult..mBestAlloyMatches.get(0);
-            String matchAlloy = bestGrade.grade.name;//bestFingerprintMatch.mName;
+            String matchAlloy = bestGrade.grade.getDisplayName();//bestFingerprintMatch.mName;
 
 
             String matchNumber = bestGrade.matchNumber > 0 ? DecimalRounder.round(bestGrade.matchNumber) : "0";
