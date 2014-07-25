@@ -2,12 +2,18 @@ package com.sciaps.android.zebralabelprint.zebraprint;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.stream.JsonReader;
 import com.sciaps.android.zebralabelprint.zebraprint.utils.PrintUtils;
 import com.sciaps.android.zebralabelprint.zebraprint.utils.SettingsHelper;
 import com.sciaps.common.libs.LIBAnalysisResult;
@@ -15,6 +21,7 @@ import com.sciaps.common.serialize.JsonSerializerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 
 
 public class SplashStartActivity extends Activity {
@@ -60,20 +67,26 @@ public class SplashStartActivity extends Activity {
 
         }else {
 
+
+            ContentResolver resolver = this.getContentResolver();
+
+
+            //JsonSerializerFactory.getSerializer(LIBAnalysisResult.class).deserialize(is);// LibsApplication.getInstance(mActivity).getInjector().getInstance(Gson.class);
+
+
+            Gson gson = ZebraPrintApplication.getInstance().getInjector().getInstance(Gson.class);
+            //Log.e(TAG, "Error");
+
             try {
-                Log.e(TAG, "Share uri: " + dataUri);
-
-
-                InputStream is = getContentResolver().openInputStream(dataUri);
-                libsResult = loadResult(is);
-
+                libsResult = loadResult(resolver, dataUri, gson);
                 print();
-                return;
-
-            } catch (Exception e) {
+               // return retval;
+            } catch (IOException e) {
                 Log.e(TAG, "Error", e);
-
+                Toast.makeText(getApplicationContext(),"Error Fetching Test",Toast.LENGTH_LONG).show();
+                finish();
             }
+
         }
 
     }
@@ -81,52 +94,6 @@ public class SplashStartActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-
-
-
-//
-//
-//
-//        new PrinterFinder(getApplicationContext(), new PrinterFinder.Callback() {
-//            @Override
-//            public void onMatchCallback(boolean printerWasFound) {
-//                if (printerWasFound) {
-//                    Log.i(TAG, "Printer found: " + mac);
-//
-//                    if (PRINT_INTENT.equals(action) && type != null) {
-//                        try {
-//                            Log.e(TAG, "Share uri: " + dataUri);
-//
-//
-//                            InputStream is = getContentResolver().openInputStream(dataUri);
-//                            libsResult = loadResult(is);
-//
-//                            print();
-//                            return;
-//
-//                        } catch (Exception e) {
-//                            Log.e(TAG, "Error", e);
-//
-//                        }
-//
-//
-//                    } else {
-//                        Log.w(TAG, "No file description");
-//
-//                    }
-//                }
-//                Log.i(TAG, "Printer not found ");
-//                TextView txt = (TextView) findViewById(R.id.txt_splash_start);
-//                if (txt != null) {
-//                    txt.setText("Printer not found");
-//                }
-//                //choose the printer
-//                goToSetUpActivity();
-//
-//                return;
-//
-//            }
-//        }, mac);
 
     }
 
@@ -171,15 +138,27 @@ public class SplashStartActivity extends Activity {
 
     }
 
-    public static LIBAnalysisResult loadResult(InputStream is) throws IOException {
-        LIBAnalysisResult retVal;
+    public static LIBAnalysisResult loadResult(ContentResolver resolver, Uri jsonUri, Gson gson) throws IOException {
+
+        LIBAnalysisResult retval = null;
+        InputStream in = resolver.openInputStream(jsonUri);
+        JsonReader reader = new JsonReader(new InputStreamReader(in));
         try {
-            retVal = JsonSerializerFactory.getSerializer(LIBAnalysisResult.class).deserialize(is);
-        } catch (IOException e) {
-            is.close();
-            throw e;
+            retval = gson.fromJson(reader, LIBAnalysisResult.class);
+        } finally {
+            reader.close();
         }
-        return retVal;
+
+        Cursor values = resolver.query(jsonUri, new String[]{"title"}, null, null, null);
+        try {
+            if (values.moveToFirst() && retval != null) {
+                retval.mTitle = values.getString(0);
+            }
+        } finally {
+            values.close();
+        }
+
+        return retval;
     }
 
     private void print() {
@@ -189,7 +168,6 @@ public class SplashStartActivity extends Activity {
         }
 
         String mac = SettingsHelper.getBluetoothAddress(getApplicationContext());
-
 
         printUtils.printPhotoFromExternal(mac, dataUri, libsResult);
 
