@@ -49,8 +49,8 @@ public class PrintTypeDialog extends DialogFragment {
         this.dialogCallback = dialogCallback;
     }
 
-    public PrintTypeDialog(String title) {
-        this.title = title;
+    public PrintTypeDialog() {
+        this.title = "Select Output";
 
     }
 

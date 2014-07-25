@@ -160,7 +160,7 @@ public class ZebraPrintActivity extends ActionBarActivity {
         @Override
         public void onClick(View view) {
 
-            dialog = new PrintTypeDialog("Select Output");
+            dialog = new PrintTypeDialog();
             dialog.setDialogCallback(new PrintTypeDialog.CallBack() {
                 @Override
                 public void onItemSelected(Types type) {
