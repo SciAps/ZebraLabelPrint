@@ -11,12 +11,14 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Looper;
+import android.util.Log;
 
 import com.sciaps.android.zebralabelprint.zebraprint.R;
 import com.sciaps.common.algorithms.GradeMatchRanker;
 import com.sciaps.common.calculation.libs.EmpiricalCurveCalc;
-import com.sciaps.common.data2.ChemResult;
-import com.sciaps.common.data2.ChemResultItem;
+
+import com.sciaps.common.data.ChemResult;
+import com.sciaps.common.data.ChemResultItem;
 import com.sciaps.common.libs.LIBAnalysisResult;
 import com.zebra.sdk.comm.BluetoothConnection;
 import com.zebra.sdk.comm.Connection;
@@ -32,7 +34,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import static com.sciaps.android.zebralabelprint.zebraprint.PrintTypeDialog.Types.Landscape3X2;
 import static com.sciaps.android.zebralabelprint.zebraprint.PrintTypeDialog.Types.Portrait2X3;
 
@@ -201,11 +202,11 @@ public class PrintUtils {
 
         if (libsResult.mResult.gradeRanks != null && libsResult.mResult.gradeRanks.size() > 0) {
             bestGrade = libsResult.mResult.gradeRanks.get(0);
-            for (EmpiricalCurveCalc.EmpiricalCurveResult r : libsResult.mResult.chemResults) {
+            for (EmpiricalCurveCalc.EmpiricalCurveResult r : libsResult.mResult.chemResults)
+            {
                 ChemResultItem i = new  ChemResultItem();
-                i.chemResult = new ChemResult(r.element);
-                i.chemResult.value = (float) r.percent;
-                i.chemResult.error = (float) r.error;
+                i.chemResult = new ChemResult(r.element, r.percent, r.error);
+
                 if (bestGrade != null) {
                     i.gradeRange = bestGrade.grade.spec.get(i.chemResult.element);
                 }
@@ -221,10 +222,11 @@ public class PrintUtils {
             Paint mTextPaint2 = new Paint(Paint.ANTI_ALIAS_FLAG);
             mTextPaint.setColor(Color.GRAY);
             mTextPaint.setTextSize(14);
-            canvas.drawText("Base: " + bestGrade.grade.getBase().name, 15, 85, mTextPaint);
+            canvas.drawText("Base: " + bestGrade.grade.getDisplayName(), 15, 85, mTextPaint);
 
 
-            if (libsResult.mResult.gradeRanks.size() > 1) {
+            if (libsResult.mResult.gradeRanks.size() > 1)
+            {
                 GradeMatchRanker.GradeRank secondGrade = libsResult.mResult.gradeRanks.get(1);
 
                 //Alloy secondMatch = libsResult.mBestAlloyMatches.get(1);
@@ -437,11 +439,24 @@ public class PrintUtils {
 
 
                 } catch (ConnectionException e) {
-                    //helper.showErrorDialogOnGuiThread(e.getMessage());
-                    mPrintCallBack.onPrintError(e);
+
+                    try {
+
+                        mPrintCallBack.onPrintError(e);
+                    }
+                    catch(Exception callError)
+                    {
+                        Log.e("ECR", e.getMessage());
+                    }
                 } catch (ZebraPrinterLanguageUnknownException e) {
                     //helper.showErrorDialogOnGuiThread(e.getMessage());
-                    mPrintCallBack.onPrintError(e);
+                   try {
+                       mPrintCallBack.onPrintError(e);
+                   }
+                   catch(Exception callError)
+                    {
+                        Log.e("ECR", e.getMessage());
+                    }
                 } finally {
                     mBmp.recycle();
                     helper.dismissLoadingDialog();

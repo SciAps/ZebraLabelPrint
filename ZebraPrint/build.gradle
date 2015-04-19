@@ -1,21 +1,21 @@
-apply plugin: 'android'
+apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 19
     buildToolsVersion "20.0.0"
 
     defaultConfig {
-        minSdkVersion 11
+        minSdkVersion 17
         targetSdkVersion 19
         versionCode 1
         versionName "1.0"
     }
     signingConfigs {
         debug {
-            storeFile file(SCIAPS_DEBUG_STORE_FILE)
-            storePassword SCIAPS_DEBUG_STORE_PASSWORD
-            keyAlias SCIAPS_DEBUG_KEY_ALIAS
-            keyPassword SCIAPS_DEBUG_KEY_PASSWORD
+             storeFile file(SCIAPS_RELEASE_STORE_FILE)
+            storePassword SCIAPS_RELEASE_STORE_PASSWORD
+            keyAlias SCIAPS_RELEASE_KEY_ALIAS
+            keyPassword SCIAPS_RELEASE_KEY_PASSWORD
         }
         release {
             storeFile file(SCIAPS_RELEASE_STORE_FILE)
@@ -30,8 +30,8 @@ android {
             signingConfig signingConfigs.debug
         }
         release {
-            runProguard false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            //runProguard false
+            //proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
             signingConfig signingConfigs.release
         }
 
@@ -43,6 +43,7 @@ android {
         exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/NOTICE'
+        exclude 'META-INF/ASL2.0'
 
     }
 
@@ -68,8 +69,11 @@ dependencies {
     }
 //    compile 'com.android.support:appcompat-v7:+'
     compile 'org.apache.commons:commons-io:1.3.2'
+    compile 'com.jakewharton:butterknife:6.1.0'
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile fileTree(dir: 'externaljars', include: 'ZSDK_ANDROID_API.jar')
     compile project(':AndroidEssentials')
+    compile project (':AndroidCommon')
+    compile project (':LIBZHardwareCommon')
     compile project(':Common')
 }

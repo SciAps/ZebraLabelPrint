@@ -25,6 +25,7 @@
             <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+
         </activity>
         <activity
             android:name="com.sciaps.android.zebralabelprint.zebraprint.BluetoothDiscovery"
@@ -42,9 +43,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
 
                 <data android:mimeType="application/json" />
-                />
+
             </intent-filter>
         </activity>
+
     </application>
 
 </manifest>

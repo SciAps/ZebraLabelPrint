@@ -58,6 +58,11 @@ public class SplashStartActivity extends Activity {
         final String action = intent.getAction();
         final String type = intent.getType();
         dataUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+        if (dataUri == null)
+        {
+            dataUri = intent.getData();
+        }
+
 
 
         //if no mac address go to settings
@@ -81,7 +86,7 @@ public class SplashStartActivity extends Activity {
                 libsResult = loadResult(resolver, dataUri, gson);
                 print();
                // return retval;
-            } catch (IOException e) {
+            } catch (Exception e) {
                 Log.e(TAG, "Error", e);
                 Toast.makeText(getApplicationContext(),"Error Fetching Test",Toast.LENGTH_LONG).show();
                 finish();
@@ -138,14 +143,21 @@ public class SplashStartActivity extends Activity {
 
     }
 
-    public static LIBAnalysisResult loadResult(ContentResolver resolver, Uri jsonUri, Gson gson) throws IOException {
+    public static LIBAnalysisResult loadResult(ContentResolver resolver, Uri jsonUri, Gson gson) throws Exception {
 
         LIBAnalysisResult retval = null;
         InputStream in = resolver.openInputStream(jsonUri);
         JsonReader reader = new JsonReader(new InputStreamReader(in));
         try {
             retval = gson.fromJson(reader, LIBAnalysisResult.class);
-        } finally {
+        }
+        catch (Exception e)
+        {
+            reader.close();
+            throw e;
+
+        }
+        finally {
             reader.close();
         }
 

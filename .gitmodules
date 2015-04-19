@@ -4,3 +4,9 @@
 [submodule "Common"]
 	path = Common
 	url = git@github.com:SciAps/Common.git
+[submodule "AndroidCommon"]
+	path = AndroidCommon
+	url = git@github.com:SciAps/AndroidCommon.git
+[submodule "LIBZHardwareCommon"]
+    path = LIBZHardwareCommon
+    url = git@github.com:SciAps/LIBZHardwareCommon.git

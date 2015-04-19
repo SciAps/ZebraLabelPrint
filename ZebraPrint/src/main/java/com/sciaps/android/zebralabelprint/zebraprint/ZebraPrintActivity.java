@@ -40,43 +40,46 @@ public class ZebraPrintActivity extends ActionBarActivity {
     private PrintTypeDialog dialog;
     private ImageView img_prev;
     private UIHelper helper;
+    private PrintUtils.PrintCallBack printCallBack;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_zebra_print);
-
-        helper = new UIHelper(this);
+    private void buildPrintActivity()
+    {
+        if(helper == null)
+        {
+            helper = new UIHelper(this);
+        }
         if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
             helper.showErrorDialog("Bluetooth Not Enabled");
         }
-        printUtils = new PrintUtils(ZebraPrintActivity.this);
-        printUtils.setPrinterCallback(new PrintUtils.PrintCallBack() {
-            @Override
-            public void onPrintSent() {
-                setResult(RESULT_CANCELED);
-                finish();
-                return;
-            }
+        if (printUtils == null)
+        {
+            printUtils = new PrintUtils(ZebraPrintActivity.this);
 
-            @Override
-            public void onPrintError(Exception e) {
-               // helper.showErrorDialogOnGuiThread("Error: " + e.getMessage());
-                Toast.makeText(getApplicationContext(),"Job Failed",Toast.LENGTH_LONG).show();
-                return;
-            }
-        });
+        }
+        if (printCallBack == null)
+        {
+            printCallBack = new PrintUtils.PrintCallBack()
+            {
+                @Override
+                public void onPrintSent()
+                {
+                    setResult(RESULT_CANCELED);
+                    finish();
+                }
 
+                @Override
+                public void onPrintError(Exception e)
+                {
+                    // helper.showErrorDialogOnGuiThread("Error: " + e.getMessage());
+                    Toast.makeText(getApplicationContext(),"Job Failed",Toast.LENGTH_LONG).show();
+                }
+            };
+            printUtils.setPrinterCallback(printCallBack);
+        }
         Intent intent = getIntent();
         String action = intent.getAction();
         String type = intent.getType();
         dataUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-
-//        //temp
-//        if (dataUri==null){
-//            dataUri = Uri.parse("content://com.sciaps.libs.results/item/37/json");
-//        }
-
         if (CUSTOM_INTENT.equals(action) && type != null&&dataUri!=null) {
             try {
                 Log.e(TAG, "Share uri: " + dataUri);
@@ -93,18 +96,6 @@ public class ZebraPrintActivity extends ActionBarActivity {
         } else {
             Log.w(TAG, "No file description");
         }
-
-        btn_selectPrinter = (Button) findViewById(R.id.btn_selectPrinter);
-        btn_selectPrinter.setOnClickListener(selectPrinterListener);
-        btn_print = (Button) findViewById(R.id.btn_print);
-        btn_print.setOnClickListener(printListener);
-
-        btn_type = (Button) findViewById(R.id.btn_type);
-        btn_type.setOnClickListener(typeListener);
-
-        img_prev = (ImageView) findViewById(R.id.img_prev);
-
-
         dName = SettingsHelper.getBluetoothName(getApplicationContext());
         if (dName.length() > 0) {
             btn_selectPrinter.setText(dName);
@@ -123,6 +114,33 @@ public class ZebraPrintActivity extends ActionBarActivity {
 
             img_prev.setImageBitmap(mPrintBm);
         }
+    }
+
+    @Override
+    protected void onStart()
+    {
+        super.onStart();
+     buildPrintActivity();
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_zebra_print);
+
+
+        btn_selectPrinter = (Button) findViewById(R.id.btn_selectPrinter);
+        btn_selectPrinter.setOnClickListener(selectPrinterListener);
+        btn_print = (Button) findViewById(R.id.btn_print);
+        btn_print.setOnClickListener(printListener);
+
+        btn_type = (Button) findViewById(R.id.btn_type);
+        btn_type.setOnClickListener(typeListener);
+
+        img_prev = (ImageView) findViewById(R.id.img_prev);
+        buildPrintActivity();
+
+
 
     }
 
@@ -133,7 +151,7 @@ public class ZebraPrintActivity extends ActionBarActivity {
     }
 
     public static LIBAnalysisResult loadResult(InputStream is) throws IOException {
-        LIBAnalysisResult retVal = null;
+        LIBAnalysisResult retVal;
         try {
             retVal = JsonSerializerFactory.getSerializer(LIBAnalysisResult.class).deserialize(is);
         } catch (IOException e) {
@@ -144,7 +162,8 @@ public class ZebraPrintActivity extends ActionBarActivity {
     }
 
 
-    private OnClickListener printListener = new OnClickListener() {
+    private OnClickListener printListener = new OnClickListener()
+    {
         @Override
         public void onClick(View view) {
             //mPrintBm = printUtils.createBitmapFromAnalysisResult(getApplicationContext(), dataUri, libsResult);
