@@ -15,3 +15,15 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+-dontobfuscate
+-dontwarn java.**
+-dontwarn javax.**
+-dontwarn sun.**
+-dontwarn org.joda.**
+-dontwarn org.w3c.**
+-dontwarn com.zebra.sdk.**
+
+-keep class com.zebra.sdk.** {
+ *;
+}

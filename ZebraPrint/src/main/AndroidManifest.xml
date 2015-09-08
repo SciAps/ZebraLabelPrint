@@ -12,16 +12,13 @@
         android:icon="@drawable/ic_launcher"
         android:screenOrientation="portrait" >
 
-        <activity android:name=".DiscoverActivity"
-            android:label="Zebra Test" >
-
-        </activity>
-
-
-        <activity android:name=".PrintActivity">
-
+        <activity android:name=".PrintActivity"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
+            >
             <intent-filter>
                 <action android:name="com.sciaps.android.zebra.PRINT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*"/>
             </intent-filter>
 
         </activity>
