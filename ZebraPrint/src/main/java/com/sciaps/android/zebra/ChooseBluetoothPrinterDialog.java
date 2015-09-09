@@ -10,6 +10,7 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.devsmart.TaskQueue;
@@ -29,6 +30,9 @@ import java.util.List;
 
 
 public class ChooseBluetoothPrinterDialog extends DialogFragment {
+
+    private ProgressBar mProgress;
+    private TextView mStatusText;
 
     public interface Callback {
         void onPrinterSelected(Printer printer);
@@ -54,7 +58,7 @@ public class ChooseBluetoothPrinterDialog extends DialogFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        setStyle(DialogFragment.STYLE_NO_TITLE, 0);
     }
 
     @Nullable
@@ -69,6 +73,11 @@ public class ChooseBluetoothPrinterDialog extends DialogFragment {
 
         mRefeshButton = (Button) retval.findViewById(R.id.refresh);
         mRefeshButton.setOnClickListener(mOnRefresh);
+
+        mProgress = (ProgressBar) retval.findViewById(R.id.progress);
+        mProgress.setVisibility(View.GONE);
+
+        mStatusText = (TextView) retval.findViewById(R.id.title);
 
         return retval;
 
@@ -154,6 +163,8 @@ public class ChooseBluetoothPrinterDialog extends DialogFragment {
         }
 
         mPrinterAdapter.clear();
+        mStatusText.setText("Searching...");
+        mProgress.setVisibility(View.VISIBLE);
 
         try {
             logger.info("start printer discovery");
@@ -173,6 +184,8 @@ public class ChooseBluetoothPrinterDialog extends DialogFragment {
                     logger.info("discovery finished");
                     isDiscovering = false;
                     mRefeshButton.setEnabled(true);
+                    mProgress.setVisibility(View.GONE);
+                    mStatusText.setText(String.format("Found %d", mPrinterAdapter.getCount()));
                 }
 
                 @Override
@@ -180,6 +193,8 @@ public class ChooseBluetoothPrinterDialog extends DialogFragment {
                     logger.info("discovery error {}", s);
                     isDiscovering = false;
                     mRefeshButton.setEnabled(true);
+                    mProgress.setVisibility(View.GONE);
+                    mStatusText.setText("Error: " + s);
                 }
             });
 

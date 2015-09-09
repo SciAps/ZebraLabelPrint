@@ -193,6 +193,9 @@ public class PrintActivity extends Activity {
             public boolean mSuccess = false;
             public ProgressDialog mDialog;
 
+            private final int XOFFSET = 0;
+            private final int YOFFSET = 0;
+
             @Override
             public void onBefore() {
                 mDialog = new ProgressDialog(PrintActivity.this);
@@ -220,11 +223,10 @@ public class PrintActivity extends Activity {
                             }
                         });
 
-
                         genericPrinter.printImage(new ZebraImageAndroid(image),
-                                60, 20, //the labels start a little offset
-                                0, //image.getWidth(),
-                                0, // image.getHeight(),
+                                XOFFSET, YOFFSET, //the labels start a little offset
+                                image.getWidth() + XOFFSET,
+                                image.getHeight() + YOFFSET,
                                 false);
                         mSuccess = true;
                     }

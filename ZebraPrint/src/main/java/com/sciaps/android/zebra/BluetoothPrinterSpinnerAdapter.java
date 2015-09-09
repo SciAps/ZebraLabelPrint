@@ -47,12 +47,11 @@ public class BluetoothPrinterSpinnerAdapter extends BaseAdapter {
         if(i < mItems.size()) {
             final Printer item = mItems.get(i);
             textView1.setText(item.displayName);
-            textView2.setVisibility(View.VISIBLE);
             textView2.setText(item.connectionString);
         } else {
 
-            textView1.setText("Search for printer...");
-            textView2.setVisibility(View.GONE);
+            textView1.setText("No Printer");
+            textView2.setText("Touch to Discover");
         }
 
         return retval;
