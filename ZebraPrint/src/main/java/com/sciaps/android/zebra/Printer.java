@@ -1,14 +1,12 @@
 package com.sciaps.android.zebra;
 
 
-import com.google.common.collect.ComparisonChain;
 import com.zebra.sdk.comm.Connection;
 import com.zebra.sdk.comm.ConnectionBuilder;
 import com.zebra.sdk.comm.ConnectionException;
 import com.zebra.sdk.printer.ZebraPrinter;
 import com.zebra.sdk.printer.ZebraPrinterFactory;
 import com.zebra.sdk.printer.ZebraPrinterLinkOs;
-import com.zebra.sdk.printer.discovery.DiscoveredPrinter;
 import com.zebra.sdk.printer.discovery.DiscoveredPrinterBluetooth;
 
 import org.slf4j.Logger;
@@ -24,6 +22,9 @@ public class Printer {
 
     String displayName;
     String connectionString;
+
+    //assumes this is a RW220 (printer resolution of 203 dpi, printer head 2.25")
+    int mPrinterWidth = (int) (203 * 2.25);
     private transient Connection mConnection;
 
     public static Printer createPrinter(DiscoveredPrinterBluetooth printer) {
@@ -102,5 +103,9 @@ public class Printer {
     @Override
     public int hashCode() {
         return connectionString.hashCode();
+    }
+
+    public int getPrinterWidth() {
+        return mPrinterWidth;
     }
 }

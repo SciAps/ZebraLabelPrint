@@ -2,30 +2,21 @@ package com.sciaps.android.zebra;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Debug;
 import android.preference.PreferenceManager;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
-import android.widget.TextView;
 
 import com.devsmart.android.BackgroundTask;
 import com.zebra.sdk.comm.Connection;
@@ -38,9 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 public class PrintActivity extends Activity {
 
@@ -193,8 +182,8 @@ public class PrintActivity extends Activity {
             public boolean mSuccess = false;
             public ProgressDialog mDialog;
 
-            private final int XOFFSET = 0;
-            private final int YOFFSET = 0;
+            private int mXOffset = 0;
+            private int mYOffset = 0;
 
             @Override
             public void onBefore() {
@@ -223,10 +212,13 @@ public class PrintActivity extends Activity {
                             }
                         });
 
+                        mXOffset = (printer.getPrinterWidth() - image.getWidth()) / 2;
+                        mXOffset = Math.max(0, mXOffset);
+
                         genericPrinter.printImage(new ZebraImageAndroid(image),
-                                XOFFSET, YOFFSET, //the labels start a little offset
-                                image.getWidth() + XOFFSET,
-                                image.getHeight() + YOFFSET,
+                                mXOffset, mYOffset, //the labels start a little offset
+                                image.getWidth(),
+                                image.getHeight(),
                                 false);
                         mSuccess = true;
                     }
