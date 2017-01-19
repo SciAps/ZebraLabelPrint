@@ -21,6 +21,7 @@ import android.widget.Spinner;
 import com.devsmart.android.BackgroundTask;
 import com.zebra.sdk.comm.Connection;
 import com.zebra.sdk.graphics.internal.ZebraImageAndroid;
+import com.zebra.sdk.printer.PrinterLanguage;
 import com.zebra.sdk.printer.ZebraPrinter;
 import com.zebra.sdk.printer.ZebraPrinterFactory;
 
@@ -211,6 +212,14 @@ public class PrintActivity extends Activity {
                                 mDialog.setMessage("Printing...");
                             }
                         });
+
+                        if(genericPrinter.getPrinterControlLanguage() != PrinterLanguage.ZPL){
+                            com.zebra.sdk.printer.SGD.SET("device.languages", "zpl", connection);
+
+                            if(genericPrinter.getPrinterControlLanguage() != PrinterLanguage.ZPL) {
+                                throw new Exception("printer control language is not ZPL");
+                            }
+                        }
 
                         mXOffset = (printer.getPrinterWidth() - image.getWidth()) / 2;
                         mXOffset = Math.max(0, mXOffset);
