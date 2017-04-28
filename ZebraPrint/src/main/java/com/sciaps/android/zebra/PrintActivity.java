@@ -20,6 +20,7 @@ import android.widget.Spinner;
 
 import com.devsmart.android.BackgroundTask;
 import com.zebra.sdk.comm.Connection;
+import com.zebra.sdk.comm.ConnectionException;
 import com.zebra.sdk.graphics.internal.ZebraImageAndroid;
 import com.zebra.sdk.printer.PrinterLanguage;
 import com.zebra.sdk.printer.ZebraPrinter;
@@ -34,9 +35,8 @@ import java.util.Collection;
 
 public class PrintActivity extends Activity {
 
-    private static final Logger logger = LoggerFactory.getLogger(PrintActivity.class);
-
     public static final String KEY_BITMAP = "bitmap";
+    private static final Logger logger = LoggerFactory.getLogger(PrintActivity.class);
     private Bitmap mBitmap;
     private Button mPrintButton;
     private Spinner mChoosePrinterButton;
@@ -44,6 +44,19 @@ public class PrintActivity extends Activity {
     private BluetoothPrinterSpinnerAdapter mPrinterAdapter;
     private SavedPrintersSettings mSavedPrinters;
     private Printer mSelectedPrinter;
+    private View.OnClickListener mOnPrintClicked = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+
+            if (mSelectedPrinter == null) {
+                selectPrinter();
+            } else {
+                print(mSelectedPrinter, mBitmap);
+
+            }
+
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,8 +75,8 @@ public class PrintActivity extends Activity {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 logger.info("");
-                Printer printer = (Printer)mPrinterAdapter.getItem(i);
-                if(printer != null) {
+                Printer printer = (Printer) mPrinterAdapter.getItem(i);
+                if (printer != null) {
                     mSelectedPrinter = printer;
                 } else {
                     selectPrinter();
@@ -88,7 +101,7 @@ public class PrintActivity extends Activity {
         Collection<Printer> savedPrinters = mSavedPrinters.getSavedPrinters();
         mPrinterAdapter.setPrinters(savedPrinters);
 
-        if(!savedPrinters.isEmpty()) {
+        if (!savedPrinters.isEmpty()) {
             mChoosePrinterButton.setSelection(0);
         }
 
@@ -102,7 +115,7 @@ public class PrintActivity extends Activity {
 
     private void useIntent(Intent intent) {
         final Uri dataUri = intent.getData();
-        if(dataUri == null){
+        if (dataUri == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setIcon(android.R.drawable.ic_dialog_alert);
             builder.setTitle("Error");
@@ -163,20 +176,6 @@ public class PrintActivity extends Activity {
 
     }
 
-    private View.OnClickListener mOnPrintClicked = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-
-            if(mSelectedPrinter == null) {
-                selectPrinter();
-            } else {
-                print(mSelectedPrinter, mBitmap);
-
-            }
-
-        }
-    };
-
     private void print(final Printer printer, final Bitmap image) {
         BackgroundTask.runBackgroundTask(new BackgroundTask() {
 
@@ -197,9 +196,10 @@ public class PrintActivity extends Activity {
 
             @Override
             public void onBackground() {
+                Connection connection = null;
 
                 try {
-                    Connection connection = printer.getConnection();
+                    connection = printer.getConnection();
                     if (!connection.isConnected()) {
                         connection.open();
                     }
@@ -213,12 +213,8 @@ public class PrintActivity extends Activity {
                             }
                         });
 
-                        if(genericPrinter.getPrinterControlLanguage() != PrinterLanguage.ZPL){
+                        if (genericPrinter.getPrinterControlLanguage() != PrinterLanguage.ZPL) {
                             com.zebra.sdk.printer.SGD.SET("device.languages", "zpl", connection);
-
-                            if(genericPrinter.getPrinterControlLanguage() != PrinterLanguage.ZPL) {
-                                throw new Exception("printer control language is not ZPL");
-                            }
                         }
 
                         mXOffset = (printer.getPrinterWidth() - image.getWidth()) / 2;
@@ -229,10 +225,30 @@ public class PrintActivity extends Activity {
                                 image.getWidth(),
                                 image.getHeight(),
                                 false);
+
+                        boolean printInProgress = true;
+                        while (printInProgress) {
+                            Thread.sleep(10);
+
+                            try {
+                                genericPrinter.getCurrentStatus();
+                                printInProgress = false;
+                            } catch (ConnectionException ex) {
+                                logger.info("Waiting for printer to finish");
+                            }
+                        }
                         mSuccess = true;
                     }
                 } catch (Exception e) {
                     logger.error("", e);
+                } finally {
+                    if (connection != null) {
+                        try {
+                            connection.close();
+                        } catch (ConnectionException e) {
+                            logger.error("", e);
+                        }
+                    }
                 }
 
             }
@@ -240,7 +256,7 @@ public class PrintActivity extends Activity {
             @Override
             public void onAfter() {
                 mDialog.dismiss();
-                if(mSuccess) {
+                if (mSuccess) {
                     mSavedPrinters.setFirstPrinter(printer);
                     mSavedPrinters.savePrinters();
                     finish();
