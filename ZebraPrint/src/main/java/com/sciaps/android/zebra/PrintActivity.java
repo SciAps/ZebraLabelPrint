@@ -20,6 +20,7 @@ import android.widget.Spinner;
 
 import com.devsmart.android.BackgroundTask;
 import com.zebra.sdk.comm.Connection;
+import com.zebra.sdk.comm.ConnectionException;
 import com.zebra.sdk.graphics.internal.ZebraImageAndroid;
 import com.zebra.sdk.printer.PrinterLanguage;
 import com.zebra.sdk.printer.ZebraPrinter;
@@ -34,16 +35,28 @@ import java.util.Collection;
 
 public class PrintActivity extends Activity {
 
-    private static final Logger logger = LoggerFactory.getLogger(PrintActivity.class);
-
     public static final String KEY_BITMAP = "bitmap";
+    private static final Logger logger = LoggerFactory.getLogger(PrintActivity.class);
     private Bitmap mBitmap;
     private Button mPrintButton;
     private Spinner mChoosePrinterButton;
     private ImageView mPrintPreview;
     private BluetoothPrinterSpinnerAdapter mPrinterAdapter;
     private SavedPrintersSettings mSavedPrinters;
-    private Printer mSelectedPrinter;
+    private static Printer mSelectedPrinter;
+    private View.OnClickListener mOnPrintClicked = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+
+            if (mSelectedPrinter == null) {
+                selectPrinter();
+            } else {
+                print(mSelectedPrinter, mBitmap);
+
+            }
+
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,8 +75,8 @@ public class PrintActivity extends Activity {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 logger.info("");
-                Printer printer = (Printer)mPrinterAdapter.getItem(i);
-                if(printer != null) {
+                Printer printer = (Printer) mPrinterAdapter.getItem(i);
+                if (printer != null) {
                     mSelectedPrinter = printer;
                 } else {
                     selectPrinter();
@@ -88,7 +101,7 @@ public class PrintActivity extends Activity {
         Collection<Printer> savedPrinters = mSavedPrinters.getSavedPrinters();
         mPrinterAdapter.setPrinters(savedPrinters);
 
-        if(!savedPrinters.isEmpty()) {
+        if (!savedPrinters.isEmpty()) {
             mChoosePrinterButton.setSelection(0);
         }
 
@@ -102,7 +115,15 @@ public class PrintActivity extends Activity {
 
     private void useIntent(Intent intent) {
         final Uri dataUri = intent.getData();
-        if(dataUri == null){
+        final Bitmap bitmap = intent.getParcelableExtra("BitmapImage");
+        final String printerMacAddress = intent.getStringExtra("PrinterMacAddress");
+        final String printerName = intent.getStringExtra("PrinterName");
+
+        mChoosePrinterButton.setVisibility(View.VISIBLE);
+        mPrintButton.setVisibility(View.VISIBLE);
+        mPrintPreview.setVisibility(View.VISIBLE);
+
+        if (dataUri == null && bitmap == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setIcon(android.R.drawable.ic_dialog_alert);
             builder.setTitle("Error");
@@ -116,66 +137,65 @@ public class PrintActivity extends Activity {
             return;
         }
 
-        BackgroundTask.runBackgroundTask(new BackgroundTask() {
+        if (dataUri != null) {
+            BackgroundTask.runBackgroundTask(new BackgroundTask() {
 
-            public ProgressDialog mDialog;
-            private boolean mSuccess = false;
+                public ProgressDialog mDialog;
+                private boolean mSuccess = false;
 
-            @Override
-            public void onBefore() {
-                super.onBefore();
-                mDialog = new ProgressDialog(PrintActivity.this);
-                mDialog.setIndeterminate(true);
-                mDialog.setMessage("Loading...");
-                mDialog.setCancelable(false);
-                mDialog.show();
-            }
-
-            @Override
-            public void onBackground() {
-                try {
-                    InputStream in = getContentResolver().openInputStream(dataUri);
-                    mBitmap = BitmapFactory.decodeStream(in);
-                    mSuccess = true;
-                } catch (IOException e) {
-                    logger.error("", e);
+                @Override
+                public void onBefore() {
+                    super.onBefore();
+                    mDialog = new ProgressDialog(PrintActivity.this);
+                    mDialog.setIndeterminate(true);
+                    mDialog.setMessage("Loading...");
+                    mDialog.setCancelable(false);
+                    mDialog.show();
                 }
+
+                @Override
+                public void onBackground() {
+                    try {
+                        InputStream in = getContentResolver().openInputStream(dataUri);
+                        mBitmap = BitmapFactory.decodeStream(in);
+                        mSuccess = true;
+                    } catch (IOException e) {
+                        logger.error("", e);
+                    }
+                }
+
+                @Override
+                public void onAfter() {
+                    mDialog.dismiss();
+                    mPrintPreview.setImageBitmap(mBitmap);
+                    if (!mSuccess) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(PrintActivity.this);
+                        builder.setIcon(android.R.drawable.ic_dialog_alert);
+                        builder.setTitle("Error");
+                        builder.setMessage("Error");
+                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                finish();
+                            }
+                        });
+                    }
+                }
+            });
+        } else if (bitmap != null) {
+            mChoosePrinterButton.setVisibility(View.GONE);
+            mPrintButton.setVisibility(View.GONE);
+            mPrintPreview.setVisibility(View.GONE);
+
+            mBitmap = bitmap;
+            if (mSelectedPrinter == null || mSelectedPrinter.connectionString.contains(printerMacAddress) == false) {
+                mSelectedPrinter = Printer.createPrinter(printerName, printerMacAddress);
             }
 
-            @Override
-            public void onAfter() {
-                mDialog.dismiss();
-                mPrintPreview.setImageBitmap(mBitmap);
-                if (!mSuccess) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(PrintActivity.this);
-                    builder.setIcon(android.R.drawable.ic_dialog_alert);
-                    builder.setTitle("Error");
-                    builder.setMessage("Error");
-                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            finish();
-                        }
-                    });
-                }
-            }
-        });
+            print(mSelectedPrinter, mBitmap);
+        }
 
     }
-
-    private View.OnClickListener mOnPrintClicked = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-
-            if(mSelectedPrinter == null) {
-                selectPrinter();
-            } else {
-                print(mSelectedPrinter, mBitmap);
-
-            }
-
-        }
-    };
 
     private void print(final Printer printer, final Bitmap image) {
         BackgroundTask.runBackgroundTask(new BackgroundTask() {
@@ -197,9 +217,10 @@ public class PrintActivity extends Activity {
 
             @Override
             public void onBackground() {
+                Connection connection = null;
 
                 try {
-                    Connection connection = printer.getConnection();
+                    connection = printer.getConnection();
                     if (!connection.isConnected()) {
                         connection.open();
                     }
@@ -213,12 +234,8 @@ public class PrintActivity extends Activity {
                             }
                         });
 
-                        if(genericPrinter.getPrinterControlLanguage() != PrinterLanguage.ZPL){
+                        if (genericPrinter.getPrinterControlLanguage() != PrinterLanguage.ZPL) {
                             com.zebra.sdk.printer.SGD.SET("device.languages", "zpl", connection);
-
-                            if(genericPrinter.getPrinterControlLanguage() != PrinterLanguage.ZPL) {
-                                throw new Exception("printer control language is not ZPL");
-                            }
                         }
 
                         mXOffset = (printer.getPrinterWidth() - image.getWidth()) / 2;
@@ -229,18 +246,18 @@ public class PrintActivity extends Activity {
                                 image.getWidth(),
                                 image.getHeight(),
                                 false);
+
                         mSuccess = true;
                     }
                 } catch (Exception e) {
                     logger.error("", e);
                 }
-
             }
 
             @Override
             public void onAfter() {
                 mDialog.dismiss();
-                if(mSuccess) {
+                if (mSuccess) {
                     mSavedPrinters.setFirstPrinter(printer);
                     mSavedPrinters.savePrinters();
                     finish();
@@ -251,6 +268,12 @@ public class PrintActivity extends Activity {
                     builder.setMessage("Error printing document");
                     builder.setPositiveButton("OK", null);
                     builder.show();
+
+                    // The following code that here mainly for error on autoprint
+                    mPrintPreview.setImageBitmap(image);
+                    mChoosePrinterButton.setVisibility(View.VISIBLE);
+                    mPrintButton.setVisibility(View.VISIBLE);
+                    mPrintPreview.setVisibility(View.VISIBLE);
                 }
             }
         });

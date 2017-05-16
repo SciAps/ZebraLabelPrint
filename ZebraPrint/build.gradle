@@ -8,11 +8,11 @@ android {
         minSdkVersion 17
         targetSdkVersion 17
         versionCode 1
-        versionName "1.0"
+        versionName "3.0"
     }
     signingConfigs {
         debug {
-             storeFile file(SCIAPS_RELEASE_STORE_FILE)
+            storeFile file(SCIAPS_RELEASE_STORE_FILE)
             storePassword SCIAPS_RELEASE_STORE_PASSWORD
             keyAlias SCIAPS_RELEASE_KEY_ALIAS
             keyPassword SCIAPS_RELEASE_KEY_PASSWORD
@@ -57,14 +57,15 @@ android {
 }
 
 dependencies {
-    compile 'com.google.guava:guava:18.0'
-    compile 'com.google.code.gson:gson:2.3.1'
-    compile 'org.slf4j:slf4j-android:1.7.7'
-    compile 'com.dev-smart:devsmart-android:0.1.5'
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile fileTree(dir: 'externaljars', include: 'ZSDK_ANDROID_API.jar')
     //compile project(':AndroidEssentials')
     //compile project (':AndroidCommon')
     //compile project (':LIBZHardwareCommon')
     //compile project(':Common')
+    compile 'com.google.guava:guava:18.0'
+    compile 'com.google.code.gson:gson:2.3.1'
+    compile 'org.slf4j:slf4j-android:1.7.7'
+    compile 'com.dev-smart:devsmart-android:0.1.5'
+    compile 'com.android.support:appcompat-v7:19.1.0'
 }
