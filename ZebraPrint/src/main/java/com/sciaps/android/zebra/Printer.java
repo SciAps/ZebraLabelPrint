@@ -33,7 +33,13 @@ public class Printer {
         return new Printer(connectionString, displayName);
     }
 
-    private Printer() {}
+    public static Printer createPrinter(String displayName, String macAddress) {
+        String connectionString = "BT:" + macAddress;
+        return new Printer(connectionString, displayName);
+    }
+
+    private Printer() {
+    }
 
     private Printer(String connectionString, String displayName) {
         this.connectionString = connectionString;
@@ -46,7 +52,7 @@ public class Printer {
     }
 
     public Connection getConnection() throws ConnectionException {
-        if(mConnection == null) {
+        if (mConnection == null) {
             mConnection = ConnectionBuilder.build(connectionString);
         }
         return mConnection;
@@ -54,16 +60,16 @@ public class Printer {
 
     public void getPrinterInfo() throws Exception {
         mConnection = getConnection();
-        if(!mConnection.isConnected()) {
+        if (!mConnection.isConnected()) {
             mConnection.open();
         }
 
-        if(mConnection.isConnected()) {
+        if (mConnection.isConnected()) {
             ZebraPrinter genericPrinter = ZebraPrinterFactory.getInstance(mConnection);
             ZebraPrinterLinkOs linkOsPrinter = ZebraPrinterFactory.createLinkOsPrinter(genericPrinter);
 
 
-            if(linkOsPrinter != null) {
+            if (linkOsPrinter != null) {
                 logger.info("Available Settings for myDevice");
                 Set<String> availableSettings = linkOsPrinter.getAvailableSettings();
                 for (String setting : availableSettings) {
@@ -93,10 +99,10 @@ public class Printer {
 
     @Override
     public boolean equals(Object o) {
-        if(o.getClass() != Printer.class) {
+        if (o.getClass() != Printer.class) {
             return false;
         }
-        Printer other = (Printer)o;
+        Printer other = (Printer) o;
         return connectionString.equals(other.connectionString);
     }
 

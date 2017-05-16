@@ -43,7 +43,7 @@ public class PrintActivity extends Activity {
     private ImageView mPrintPreview;
     private BluetoothPrinterSpinnerAdapter mPrinterAdapter;
     private SavedPrintersSettings mSavedPrinters;
-    private Printer mSelectedPrinter;
+    private static Printer mSelectedPrinter;
     private View.OnClickListener mOnPrintClicked = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
@@ -115,7 +115,15 @@ public class PrintActivity extends Activity {
 
     private void useIntent(Intent intent) {
         final Uri dataUri = intent.getData();
-        if (dataUri == null) {
+        final Bitmap bitmap = intent.getParcelableExtra("BitmapImage");
+        final String printerMacAddress = intent.getStringExtra("PrinterMacAddress");
+        final String printerName = intent.getStringExtra("PrinterName");
+
+        mChoosePrinterButton.setVisibility(View.VISIBLE);
+        mPrintButton.setVisibility(View.VISIBLE);
+        mPrintPreview.setVisibility(View.VISIBLE);
+
+        if (dataUri == null && bitmap == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setIcon(android.R.drawable.ic_dialog_alert);
             builder.setTitle("Error");
@@ -129,50 +137,63 @@ public class PrintActivity extends Activity {
             return;
         }
 
-        BackgroundTask.runBackgroundTask(new BackgroundTask() {
+        if (dataUri != null) {
+            BackgroundTask.runBackgroundTask(new BackgroundTask() {
 
-            public ProgressDialog mDialog;
-            private boolean mSuccess = false;
+                public ProgressDialog mDialog;
+                private boolean mSuccess = false;
 
-            @Override
-            public void onBefore() {
-                super.onBefore();
-                mDialog = new ProgressDialog(PrintActivity.this);
-                mDialog.setIndeterminate(true);
-                mDialog.setMessage("Loading...");
-                mDialog.setCancelable(false);
-                mDialog.show();
-            }
-
-            @Override
-            public void onBackground() {
-                try {
-                    InputStream in = getContentResolver().openInputStream(dataUri);
-                    mBitmap = BitmapFactory.decodeStream(in);
-                    mSuccess = true;
-                } catch (IOException e) {
-                    logger.error("", e);
+                @Override
+                public void onBefore() {
+                    super.onBefore();
+                    mDialog = new ProgressDialog(PrintActivity.this);
+                    mDialog.setIndeterminate(true);
+                    mDialog.setMessage("Loading...");
+                    mDialog.setCancelable(false);
+                    mDialog.show();
                 }
+
+                @Override
+                public void onBackground() {
+                    try {
+                        InputStream in = getContentResolver().openInputStream(dataUri);
+                        mBitmap = BitmapFactory.decodeStream(in);
+                        mSuccess = true;
+                    } catch (IOException e) {
+                        logger.error("", e);
+                    }
+                }
+
+                @Override
+                public void onAfter() {
+                    mDialog.dismiss();
+                    mPrintPreview.setImageBitmap(mBitmap);
+                    if (!mSuccess) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(PrintActivity.this);
+                        builder.setIcon(android.R.drawable.ic_dialog_alert);
+                        builder.setTitle("Error");
+                        builder.setMessage("Error");
+                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                finish();
+                            }
+                        });
+                    }
+                }
+            });
+        } else if (bitmap != null) {
+            mChoosePrinterButton.setVisibility(View.GONE);
+            mPrintButton.setVisibility(View.GONE);
+            mPrintPreview.setVisibility(View.GONE);
+
+            mBitmap = bitmap;
+            if (mSelectedPrinter == null || mSelectedPrinter.connectionString.contains(printerMacAddress) == false) {
+                mSelectedPrinter = Printer.createPrinter(printerName, printerMacAddress);
             }
 
-            @Override
-            public void onAfter() {
-                mDialog.dismiss();
-                mPrintPreview.setImageBitmap(mBitmap);
-                if (!mSuccess) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(PrintActivity.this);
-                    builder.setIcon(android.R.drawable.ic_dialog_alert);
-                    builder.setTitle("Error");
-                    builder.setMessage("Error");
-                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            finish();
-                        }
-                    });
-                }
-            }
-        });
+            print(mSelectedPrinter, mBitmap);
+        }
 
     }
 
@@ -226,31 +247,11 @@ public class PrintActivity extends Activity {
                                 image.getHeight(),
                                 false);
 
-                        boolean printInProgress = true;
-                        while (printInProgress) {
-                            Thread.sleep(10);
-
-                            try {
-                                genericPrinter.getCurrentStatus();
-                                printInProgress = false;
-                            } catch (ConnectionException ex) {
-                                logger.info("Waiting for printer to finish");
-                            }
-                        }
                         mSuccess = true;
                     }
                 } catch (Exception e) {
                     logger.error("", e);
-                } finally {
-                    if (connection != null) {
-                        try {
-                            connection.close();
-                        } catch (ConnectionException e) {
-                            logger.error("", e);
-                        }
-                    }
                 }
-
             }
 
             @Override
@@ -267,6 +268,12 @@ public class PrintActivity extends Activity {
                     builder.setMessage("Error printing document");
                     builder.setPositiveButton("OK", null);
                     builder.show();
+
+                    // The following code that here mainly for error on autoprint
+                    mPrintPreview.setImageBitmap(image);
+                    mChoosePrinterButton.setVisibility(View.VISIBLE);
+                    mPrintButton.setVisibility(View.VISIBLE);
+                    mPrintPreview.setVisibility(View.VISIBLE);
                 }
             }
         });
