@@ -204,7 +204,7 @@ public class PrintActivity extends Activity {
             public ProgressDialog mDialog;
 
             private int mXOffset = 0;
-            private int mYOffset = 0;
+            private int mYOffset = 15;
 
             @Override
             public void onBefore() {

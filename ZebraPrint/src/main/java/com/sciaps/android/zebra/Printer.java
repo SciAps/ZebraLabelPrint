@@ -1,6 +1,8 @@
 package com.sciaps.android.zebra;
 
 
+import android.os.Environment;
+
 import com.zebra.sdk.comm.Connection;
 import com.zebra.sdk.comm.ConnectionBuilder;
 import com.zebra.sdk.comm.ConnectionException;
@@ -12,6 +14,10 @@ import com.zebra.sdk.printer.discovery.DiscoveredPrinterBluetooth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,12 +25,13 @@ public class Printer {
 
 
     private static final Logger logger = LoggerFactory.getLogger(Printer.class);
+    private static final String PRINTER_WIDTH_FILE = "zebra_printer_width.cfg";
 
     String displayName;
     String connectionString;
 
     //assumes this is a RW220 (printer resolution of 203 dpi, printer head 2.25")
-    int mPrinterWidth = (int) (203 * 2.25);
+    int mPrinterWidth = (int) (203 * 2.84);
     private transient Connection mConnection;
 
     public static Printer createPrinter(DiscoveredPrinterBluetooth printer) {
@@ -112,6 +119,21 @@ public class Printer {
     }
 
     public int getPrinterWidth() {
-        return mPrinterWidth;
+        int savedWidth = mPrinterWidth;
+
+        try {
+            FileReader fileReader = new FileReader(Environment.getExternalStorageDirectory() + "/sciaps/" + PRINTER_WIDTH_FILE);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            String line = "";
+            while((line = bufferedReader.readLine()) != null) {
+                savedWidth = (int) (Double.parseDouble(line) * 203);
+                break;
+            }
+            bufferedReader.close();
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+
+        return savedWidth;
     }
 }
