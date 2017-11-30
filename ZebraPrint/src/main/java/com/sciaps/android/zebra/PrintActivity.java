@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.AdapterView;
@@ -29,9 +30,14 @@ import com.zebra.sdk.printer.ZebraPrinterFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.Collection;
+
+import static com.sciaps.android.zebra.Printer.PRINTER_WIDTH_FILE;
 
 public class PrintActivity extends Activity {
 
@@ -44,6 +50,7 @@ public class PrintActivity extends Activity {
     private BluetoothPrinterSpinnerAdapter mPrinterAdapter;
     private SavedPrintersSettings mSavedPrinters;
     private static Printer mSelectedPrinter;
+    private static String DEFAULT_WIDTH = "2.84";
     private View.OnClickListener mOnPrintClicked = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
@@ -105,6 +112,23 @@ public class PrintActivity extends Activity {
             mChoosePrinterButton.setSelection(0);
         }
 
+        createDefaultWidthFile();
+    }
+
+    private void createDefaultWidthFile() {
+        try {
+            File file = new File(Environment.getExternalStorageDirectory() + "/sciaps/" + PRINTER_WIDTH_FILE);
+            if (!file.exists()) {
+                file.createNewFile();
+                FileOutputStream outputStream = new FileOutputStream(file, false);
+                PrintWriter out = new PrintWriter(outputStream, true);
+                out.println(DEFAULT_WIDTH);
+                out.close();
+                outputStream.close();
+            }
+        } catch (Exception e) {
+            logger.error("", e);
+        }
     }
 
     @Override
