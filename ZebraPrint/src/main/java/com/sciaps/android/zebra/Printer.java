@@ -23,9 +23,8 @@ import java.util.Set;
 
 public class Printer {
 
-
+    public static final String PRINTER_WIDTH_FILE = "zebra_printer_width.cfg";
     private static final Logger logger = LoggerFactory.getLogger(Printer.class);
-    private static final String PRINTER_WIDTH_FILE = "zebra_printer_width.cfg";
 
     String displayName;
     String connectionString;

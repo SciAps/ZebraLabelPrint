@@ -37,10 +37,11 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.Collection;
 
+import static com.sciaps.android.zebra.Printer.PRINTER_WIDTH_FILE;
+
 public class PrintActivity extends Activity {
 
     public static final String KEY_BITMAP = "bitmap";
-    private static final String PRINTER_WIDTH_FILE = "zebra_printer_width.cfg";
     private static final Logger logger = LoggerFactory.getLogger(PrintActivity.class);
     private Bitmap mBitmap;
     private Button mPrintButton;
