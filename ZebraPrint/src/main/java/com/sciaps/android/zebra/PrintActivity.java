@@ -12,6 +12,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.AdapterView;
@@ -51,6 +52,11 @@ public class PrintActivity extends Activity {
     private SavedPrintersSettings mSavedPrinters;
     private static Printer mSelectedPrinter;
     private static String DEFAULT_WIDTH = "2.84";
+    BluetoothAdapter mBluetoothAdapter;
+
+    private int mRetryCount = 0;
+    private int REQUEST_DEVICE_DISCOVERABLE = 1;
+
     private View.OnClickListener mOnPrintClicked = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
@@ -58,8 +64,8 @@ public class PrintActivity extends Activity {
             if (mSelectedPrinter == null) {
                 selectPrinter();
             } else {
+                mRetryCount = 0;
                 print(mSelectedPrinter, mBitmap);
-
             }
 
         }
@@ -69,7 +75,7 @@ public class PrintActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (!mBluetoothAdapter.isEnabled()) {
             mBluetoothAdapter.enable();
         }
@@ -216,6 +222,7 @@ public class PrintActivity extends Activity {
                 mSelectedPrinter = Printer.createPrinter(printerName, printerMacAddress);
             }
 
+            mRetryCount = 0;
             print(mSelectedPrinter, mBitmap);
         }
 
@@ -286,21 +293,44 @@ public class PrintActivity extends Activity {
                     mSavedPrinters.savePrinters();
                     finish();
                 } else {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(PrintActivity.this);
-                    builder.setIcon(android.R.drawable.ic_dialog_alert);
-                    builder.setTitle("Error");
-                    builder.setMessage("Error printing document");
-                    builder.setPositiveButton("OK", null);
-                    builder.show();
 
-                    // The following code that here mainly for error on autoprint
-                    mPrintPreview.setImageBitmap(image);
-                    mChoosePrinterButton.setVisibility(View.VISIBLE);
-                    mPrintButton.setVisibility(View.VISIBLE);
-                    mPrintPreview.setVisibility(View.VISIBLE);
+                    if (mRetryCount >= 5) {
+                        endRetryPrint(image);
+                    } else {
+                        if (mBluetoothAdapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+                            Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+                            discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0);
+                            startActivityForResult(discoverableIntent, REQUEST_DEVICE_DISCOVERABLE);
+                        }
+
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                mRetryCount++;
+                                print(printer, image);
+                            }
+                        }, 1000);
+                    }
+
+
                 }
             }
         });
+    }
+
+    private void endRetryPrint(Bitmap image) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(PrintActivity.this);
+        builder.setIcon(android.R.drawable.ic_dialog_alert);
+        builder.setTitle("Error");
+        builder.setMessage("Error printing document");
+        builder.setPositiveButton("OK", null);
+        builder.show();
+
+        // The following code that here mainly for error on autoprint
+        mPrintPreview.setImageBitmap(image);
+        mChoosePrinterButton.setVisibility(View.VISIBLE);
+        mPrintButton.setVisibility(View.VISIBLE);
+        mPrintPreview.setVisibility(View.VISIBLE);
     }
 
     private void selectPrinter() {
@@ -313,6 +343,7 @@ public class PrintActivity extends Activity {
                 int index = mPrinterAdapter.addPrinter(printer);
                 mChoosePrinterButton.setSelection(index);
                 mSelectedPrinter = printer;
+                mRetryCount = 0;
                 print(mSelectedPrinter, mBitmap);
             }
         });
